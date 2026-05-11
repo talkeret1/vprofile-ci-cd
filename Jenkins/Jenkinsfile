@@ -1,0 +1,34 @@
+pipeline {
+    agent any
+    
+    tools {
+       maven 'Maven 3.9.15'
+    }
+
+    environment {
+        IMAGE_NAME = "talkeret/vprofileapp"
+    }
+
+    stages {
+
+        stage('Clone') {
+            steps {
+                git branch: 'containers',
+                    url: 'https://github.com/hkhcoder/vprofile-project.git'
+            }
+        }
+
+        stage('Code Quality') {
+            steps {
+                sh 'mvn validate checkstyle:checkstyle'
+            }
+        }
+        
+        stage('Build WAR') {
+            steps {
+                sh 'mvn clean install'
+            }
+   
+        }
+    }
+}
