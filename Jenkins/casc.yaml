@@ -1,0 +1,27 @@
+jenkins:
+  systemMessage: "Jenkins configured automatically"
+
+  numExecutors: 2
+
+  mode: NORMAL
+
+  labelString: "docker"
+
+appearance:
+  locale:
+    systemLocale: en
+    ignoreAcceptLanguage: true
+  themeManager:
+    disableUserThemes: true
+    theme: "darkSystem"
+
+
+tool:
+  maven:
+    installations:
+      - name: "Maven 3.9.15"
+        properties:
+          - installSource:
+              installers:
+                - maven:
+                    id: "3.9.15"

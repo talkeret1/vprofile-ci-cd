@@ -1,0 +1,10 @@
+dark-theme
+locale
+docker-plugin
+docker-workflow
+configuration-as-code
+git
+sonar
+pipeline-stage-view
+pipeline-graph-view
+blueocean
