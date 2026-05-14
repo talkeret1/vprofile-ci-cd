@@ -29,7 +29,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
   container_definitions = jsonencode([
     {
       name  = "vproapp"
-      image = "943560362977.dkr.ecr.us-east-1.amazonaws.com/vprofile/app:1"
+      image = "943560362977.dkr.ecr.us-east-1.amazonaws.com/vprofile/app:latest"
 
       portMappings = [{
         containerPort = 8080
@@ -38,8 +38,8 @@ resource "aws_ecs_task_definition" "vproapp_task" {
 
       environment = [
         {
-          name = "DB_URL"
-          value = var.db_url
+          name  = "DB_HOST"
+          value = aws_db_instance.vprofile_db.address
         },
         {
           name  = "DB_USER"
@@ -49,22 +49,22 @@ resource "aws_ecs_task_definition" "vproapp_task" {
           name  = "DB_PASS"
           value = var.db_pass
         },
-        {
-          name = "MEMCACHED_HOST"
-          value = var.memcached_host
-        },
-        {
-          name  = "RABBITMQ_HOST"
-          value = var.rabbitmq_host
-        },
-        {
-          name  = "RABBITMQ_USER"
-          value = var.rabbitmq_user
-        },
-        {
-          name  = "RABBITMQ_PASS"
-          value = var.rabbitmq_pass
-        }
+        # {
+        #   name  = "MEMCACHED_HOST"
+        #   value = var.memcached_host
+        # },
+        # {
+        #   name  = "RABBITMQ_HOST"
+        #   value = var.rabbitmq_host
+        # },
+        # {
+        #   name  = "RABBITMQ_USER"
+        #   value = var.rabbitmq_user
+        # },
+        # {
+        #   name  = "RABBITMQ_PASS"
+        #   value = var.rabbitmq_pass
+        # }
       ]
 
       logConfiguration = {
