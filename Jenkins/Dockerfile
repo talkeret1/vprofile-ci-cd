@@ -7,7 +7,8 @@ RUN apt-get update && \
     docker.io \
     wget \
     gnupg \
-    lsb-release
+    lsb-release \
+    awscli
 
 RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
     | gpg --dearmor -o /usr/share/keyrings/trivy.gpg

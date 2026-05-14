@@ -8,3 +8,4 @@ sonar
 pipeline-stage-view
 pipeline-graph-view
 blueocean
+ec2

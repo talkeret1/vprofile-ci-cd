@@ -6,8 +6,10 @@ pipeline {
     }
 
     environment {
-        IMAGE_NAME = "talkeret/vprofileapp"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        AWS_REGION = "us-east-1"
+        ECR_REGISTRY   = "943560362977.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_REPO = "vprofile/app"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -56,27 +58,35 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest -f Docker-files/app/Dockerfile .'
+                sh "docker build -t $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPO:latest -f Docker-files/app/Dockerfile ."
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                // sh 'trivy image --severity HIGH,CRITICAL --exit-code 1 $IMAGE_NAME:$IMAGE_TAG'
-                sh 'trivy image --severity HIGH,CRITICAL $IMAGE_NAME:$IMAGE_TAG'
+                sh "trivy image --severity HIGH,CRITICAL $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
+                // sh 'trivy image --severity HIGH,CRITICAL $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG'
+            }
+        }
+        stage('ECR Login') {
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-ec2-credentials']
+                ])
+                {
+                    sh """
+                        aws ecr get-login-password --region $AWS_REGION | \
+                        docker login --username AWS --password-stdin $ECR_REGISTRY
+                    """
+                }
             }
         }
 
         stage('Docker Push') {
-
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_TOKEN')]) {
-                    sh '''
-                    echo $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
-                    docker push $IMAGE_NAME:$IMAGE_TAG
-                    docker push $IMAGE_NAME:latest
-                    '''
-                }
+                sh "docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
+                sh "docker push $ECR_REGISTRY/$ECR_REPO:latest"
             }
         }
     }
