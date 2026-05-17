@@ -29,7 +29,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
   container_definitions = jsonencode([
     {
       name  = "vproapp"
-      image = "943560362977.dkr.ecr.us-east-1.amazonaws.com/vprofile/app:latest"
+      image = "943560362977.dkr.ecr.us-east-1.amazonaws.com/vprofile/app:${var.image_tag}"
 
       portMappings = [{
         containerPort = 8080
@@ -48,7 +48,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
         {
           name  = "DB_PASS"
           value = var.db_pass
-        },
+        }
         # {
         #   name  = "MEMCACHED_HOST"
         #   value = var.memcached_host

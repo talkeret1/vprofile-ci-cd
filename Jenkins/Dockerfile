@@ -21,13 +21,15 @@ RUN apt-get update && \
 
 RUN usermod -aG docker jenkins
 
+
+
 USER jenkins
 
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
+COPY casc.yaml /usr/share/jenkins/ref/casc.yaml
+COPY jobs.groovy /usr/share/jenkins/ref/init.groovy.d/jobs.groovy
 
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
 
-ENV CASC_JENKINS_CONFIG=/var/jenkins_home/casc.yaml
+ENV CASC_JENKINS_CONFIG=/usr/share/jenkins/ref/casc.yaml
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
-
-COPY casc.yaml /var/jenkins_home/casc.yaml

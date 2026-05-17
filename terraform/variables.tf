@@ -15,6 +15,11 @@ variable "db_pass" {
   description = "RDS password"
 }
 
+variable "image_tag" {}
+
+# terraform apply -var="image_tag=7"
+
+
 # variable "memcached_host" {
 #   type = string
 #   # default = ""
