@@ -5,6 +5,7 @@ resource "aws_ecs_service" "vproapp_service" {
   launch_type     = "FARGATE"
   desired_count   = 1
 
+
   network_configuration {
     subnets = [
       aws_subnet.vprofile_private_subnet_1.id,

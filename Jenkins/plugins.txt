@@ -1,10 +1,10 @@
 dark-theme
 locale
-workflow-aggregator
 docker-plugin
 docker-workflow
 configuration-as-code
 git
 sonar
 pipeline-stage-view
+pipeline-graph-view
 ec2

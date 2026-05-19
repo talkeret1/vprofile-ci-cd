@@ -4,7 +4,9 @@ Terraform Instruction:
 - MUST! - aws ecr create-repository --repository-name vprofile/app
 
 
-- Run: terraform apply
+- Run: 
+        terraform init
+        terraform apply
 
 
 

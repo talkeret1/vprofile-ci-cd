@@ -119,4 +119,3 @@ resource "aws_route_table_association" "vprofile_private_assoc_2" {
   subnet_id      = aws_subnet.vprofile_private_subnet_2.id
   route_table_id = aws_route_table.vprofile_private_rt.id
 }
-
