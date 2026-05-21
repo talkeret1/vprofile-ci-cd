@@ -14,6 +14,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASS}
 
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
@@ -42,7 +44,8 @@ services:
 
   vproapp:
     build:
-      context: ./Docker-files/app
+      context: .
+      dockerfile: ./Docker-files/app/Dockerfile
     image: talkeret/vprofileapp
     container_name: vproapp
 
@@ -52,6 +55,8 @@ services:
     depends_on:
       vprodb:
         condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
 
     ports:
       - "${APP_PORT}:8080"
@@ -83,6 +88,21 @@ services:
 
     depends_on:
       - vproapp
+
+  flyway:
+    image: flyway/flyway:10
+    command: -connectRetries=60 migrate
+    volumes:
+      - ./sql:/flyway/sql
+
+    environment:
+      FLYWAY_URL: jdbc:mysql://${DB_HOST:-vprodb}:3306/${MYSQL_DATABASE}?allowPublicKeyRetrieval=true&useSSL=false
+      FLYWAY_USER: root
+      FLYWAY_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    depends_on:
+      vprodb:
+        condition: service_healthy
 
 volumes:
   vprodbdata: {}
