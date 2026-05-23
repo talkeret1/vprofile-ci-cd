@@ -1,3 +1,18 @@
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
+}
+
 resource "aws_security_group" "vprofile_ecs_sg" {
   name        = "vprofile-ecs-sg"
   description = "Allow HTTP access to ECS tasks"
@@ -5,8 +20,8 @@ resource "aws_security_group" "vprofile_ecs_sg" {
 
   ingress {
     description     = "Allow app access"
-    from_port       = 8080
-    to_port         = 8080
+    from_port       = var.app_port
+    to_port         = var.app_port
     protocol        = "tcp"
     security_groups = [aws_security_group.vprofile_alb_sg.id]
   }

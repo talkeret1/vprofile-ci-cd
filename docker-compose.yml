@@ -12,10 +12,10 @@ services:
       - vprodbdata:/var/lib/mysql
 
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASS}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASS}
 
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
@@ -96,9 +96,9 @@ services:
       - ./sql:/flyway/sql
 
     environment:
-      FLYWAY_URL: jdbc:mysql://${DB_HOST:-vprodb}:3306/${MYSQL_DATABASE}?allowPublicKeyRetrieval=true&useSSL=false
+      FLYWAY_URL: jdbc:mysql://${DB_HOST:-vprodb}:3306/${DB_NAME}?allowPublicKeyRetrieval=true&useSSL=false
       FLYWAY_USER: root
-      FLYWAY_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      FLYWAY_PASSWORD: ${DB_ROOT_PASSWORD}
 
     depends_on:
       vprodb:

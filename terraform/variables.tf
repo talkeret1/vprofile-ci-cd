@@ -3,6 +3,12 @@
 #     description = "RDS url"
 # }
 
+variable "app_port" {
+  type        = number
+  default     = 8080
+  description = "vprofile App port"
+}
+
 variable "db_user" {
   type        = string
   default     = "admin_vp"
@@ -15,7 +21,13 @@ variable "db_pass" {
   description = "RDS password"
 }
 
-variable "image_tag" {}
+variable "db_name" {
+  type        = string
+  default     = "accounts"
+  description = "RDS database name"
+}
+
+# variable "image_tag" {}
 
 # terraform apply -var="image_tag=7"
 

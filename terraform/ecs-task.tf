@@ -1,18 +1,3 @@
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-    }]
-  })
-}
-
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -29,10 +14,10 @@ resource "aws_ecs_task_definition" "vproapp_task" {
   container_definitions = jsonencode([
     {
       name  = "vproapp"
-      image = "943560362977.dkr.ecr.us-east-1.amazonaws.com/vprofile/app:${var.image_tag}"
+      image = "943560362977.dkr.ecr.us-east-1.amazonaws.com/vprofile/app:latest"
 
       portMappings = [{
-        containerPort = 8080
+        containerPort = var.app_port
         protocol      = "tcp"
       }]
 
@@ -48,7 +33,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
         {
           name  = "DB_PASS"
           value = var.db_pass
-        }
+        },
         # {
         #   name  = "MEMCACHED_HOST"
         #   value = var.memcached_host
@@ -65,7 +50,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
         #   name  = "RABBITMQ_PASS"
         #   value = var.rabbitmq_pass
         # }
-      ]
+      ],
 
       logConfiguration = {
         logDriver = "awslogs"

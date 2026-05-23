@@ -3,7 +3,7 @@ resource "aws_ecs_service" "vproapp_service" {
   cluster         = aws_ecs_cluster.vprofile_cluster.id
   task_definition = aws_ecs_task_definition.vproapp_task.arn
   launch_type     = "FARGATE"
-  desired_count   = 1
+  desired_count   = 0
 
 
   network_configuration {
@@ -22,6 +22,6 @@ resource "aws_ecs_service" "vproapp_service" {
   load_balancer {
     target_group_arn = aws_lb_target_group.vproapp_tg.arn
     container_name   = "vproapp"
-    container_port   = 8080
+    container_port   = var.app_port
   }
 }

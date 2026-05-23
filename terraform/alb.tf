@@ -15,7 +15,7 @@ resource "aws_lb" "vprofile_alb" {
 
 resource "aws_lb_target_group" "vproapp_tg" {
   name        = "vproapp-tg"
-  port        = 8080
+  port        = var.app_port
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = aws_vpc.vprofile_vpc.id

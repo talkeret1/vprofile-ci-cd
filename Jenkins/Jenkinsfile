@@ -1,15 +1,18 @@
 pipeline {
     agent any
-    
+
     tools {
-       maven 'Maven 3.9.15'
+        maven 'Maven 3.9.15'
     }
 
     environment {
         AWS_REGION = "us-east-1"
-        ECR_REGISTRY   = "943560362977.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_REGISTRY = "943560362977.dkr.ecr.us-east-1.amazonaws.com"
         ECR_REPO = "vprofile/app"
-        IMAGE_TAG  = "${BUILD_NUMBER}"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+
+        PRIVATE_SUBNETS = "subnet-05553ef4ae1bbfd10,subnet-06798eba263e19b2f"
+        ECS_SECURITY_GROUP = "sg-0f7314a03189030fb"
     }
 
     stages {
@@ -26,12 +29,11 @@ pipeline {
                 sh 'mvn validate checkstyle:checkstyle'
             }
         }
-        
+
         stage('Build WAR') {
             steps {
                 sh 'mvn clean verify'
             }
-   
         }
 
         stage('SonarQube Analysis') {
@@ -49,7 +51,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Quality Gate') {
             steps {
                 waitForQualityGate abortPipeline: true
@@ -58,26 +60,33 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPO:latest -f Docker-files/app/Dockerfile ."
+                sh """
+                docker build \
+                -t $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG \
+                -t $ECR_REGISTRY/$ECR_REPO:latest \
+                -f Docker-files/app/Dockerfile .
+                """
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh "trivy image --severity HIGH,CRITICAL $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
-                // sh 'trivy image --severity HIGH,CRITICAL $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG'
+                sh """
+                trivy image --severity HIGH,CRITICAL \
+                $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+                """
             }
         }
+
         stage('ECR Login') {
             steps {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-credentials']
-                ])
-                {
+                     credentialsId: 'aws-credentials']
+                ]) {
                     sh """
-                        aws ecr get-login-password --region $AWS_REGION | \
-                        docker login --username AWS --password-stdin $ECR_REGISTRY
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login --username AWS --password-stdin $ECR_REGISTRY
                     """
                 }
             }
@@ -85,8 +94,87 @@ pipeline {
 
         stage('Docker Push') {
             steps {
-                sh "docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
+                sh """
+                docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+                docker push $ECR_REGISTRY/$ECR_REPO:latest
+                """
             }
+        }
+
+        stage('Flyway Migration') {
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh """
+                    aws ecs run-task \
+                    --cluster vprofile-cluster \
+                    --launch-type FARGATE \
+                    --task-definition flyway-task \
+                    --network-configuration "awsvpcConfiguration={subnets=[${PRIVATE_SUBNETS}],securityGroups=[${ECS_SECURITY_GROUP}],assignPublicIp=DISABLED}" \
+                    --region $AWS_REGION
+                    """
+                }
+            }
+        }
+
+        stage('Check ECS State') {
+        steps {
+            withCredentials([aws(credentialsId: 'aws-credentials')]) {
+                script {
+                    def running = sh(
+                        script: """
+                        aws ecs describe-services \
+                        --cluster vprofile-cluster \
+                        --services vproapp-service \
+                        --query "services[0].runningCount" \
+                        --output text
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    env.IS_FIRST_DEPLOY = (running == "0") ? "true" : "false"
+
+                    echo "Running tasks: ${running}"
+                    echo "First deploy: ${env.IS_FIRST_DEPLOY}"
+                }
+            }
+    }
+}   
+
+        stage('Deploy ECS Service') {
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh """
+                    if [ "$IS_FIRST_DEPLOY" = "true" ]; then
+                        echo "First deploy - setting desired count to 1"
+                        aws ecs update-service \
+                        --cluster vprofile-cluster \
+                        --service vproapp-service \
+                        --desired-count 1 \
+                        --region $AWS_REGION
+                    else
+                        echo "Regular deploy - force new deployment"
+                        aws ecs update-service \
+                        --cluster vprofile-cluster \
+                        --service vproapp-service \
+                        --force-new-deployment \
+                        --region $AWS_REGION
+                    fi
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker system prune -f'
+            echo 'Docker system cleaned up.'
         }
     }
 }
