@@ -1,3 +1,5 @@
 FROM mysql:8.0.33
 
-LABEL "Name"="mySQL Database for vprofile project"
+LABEL "Name"="Vprofile mySQL Database"
+
+COPY db_backup.sql docker-entrypoint-initdb.d/vprofile-project-mysql-db.sql

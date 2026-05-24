@@ -25,3 +25,9 @@ Terraform Instruction:
     
 - Copy Paste private_subnets variable value to Jenkins pipeline.Jenkinsfile
 - Copy Paste ecs_security_group variable value to Jenkins pipeline.Jenkinsfile
+
+
+
+
+Connect to EC2 instance using SSM:
+- aws ssm start-session --target i-09f5132500ba58705 (Instance ID of Bastion Host)

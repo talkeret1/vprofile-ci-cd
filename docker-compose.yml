@@ -55,8 +55,6 @@ services:
     depends_on:
       vprodb:
         condition: service_healthy
-      flyway:
-        condition: service_completed_successfully
 
     ports:
       - "${APP_PORT}:8080"
@@ -88,22 +86,6 @@ services:
 
     depends_on:
       - vproapp
-
-  flyway:
-    image: talkeret/flyway
-    container_name: flyway
-    command: -connectRetries=60 migrate
-    volumes:
-      - ./Docker-files/flyway/sql:/flyway/sql
-
-    environment:
-      FLYWAY_URL: jdbc:mysql://${DB_HOST:-vprodb}:3306/${DB_NAME}?allowPublicKeyRetrieval=true&useSSL=false
-      FLYWAY_USER: root
-      FLYWAY_PASSWORD: ${DB_ROOT_PASSWORD}
-
-    depends_on:
-      vprodb:
-        condition: service_healthy
 
 volumes:
   vprodbdata: {}

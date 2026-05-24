@@ -20,9 +20,9 @@ resource "aws_db_instance" "vprofile_db" {
 
   allocated_storage = 20
 
-  db_name  = "accounts"
-  username = "admin_vp"
-  password = "admin_vp"
+  db_name  = var.db_name
+  username = var.db_user
+  password = var.db_pass
 
   db_subnet_group_name   = aws_db_subnet_group.vprofile_db_subnets.name
   vpc_security_group_ids = [aws_security_group.vprofile_db_sg.id]

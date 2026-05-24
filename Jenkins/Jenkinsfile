@@ -6,13 +6,17 @@ pipeline {
     }
 
     environment {
+        // AWS Variables:
         AWS_REGION = "us-east-1"
+
+        // ECR Variables:
         ECR_REGISTRY = "943560362977.dkr.ecr.us-east-1.amazonaws.com"
         ECR_REPO = "vprofile/app"
         IMAGE_TAG = "${BUILD_NUMBER}"
 
-        PRIVATE_SUBNETS = "subnet-05553ef4ae1bbfd10,subnet-06798eba263e19b2f"
-        ECS_SECURITY_GROUP = "sg-0f7314a03189030fb"
+        // ECS Variables:
+        PRIVATE_SUBNETS = "subnet-0e25c1cf1bcbce434,subnet-00e25a6e1ed126c17"
+        ECS_SECURITY_GROUP = "sg-0c060f62368b7ac7c"
     }
 
     stages {
@@ -98,24 +102,6 @@ pipeline {
                 docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
                 docker push $ECR_REGISTRY/$ECR_REPO:latest
                 """
-            }
-        }
-
-        stage('Flyway Migration') {
-            steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-credentials']
-                ]) {
-                    sh """
-                    aws ecs run-task \
-                    --cluster vprofile-cluster \
-                    --launch-type FARGATE \
-                    --task-definition flyway-task \
-                    --network-configuration "awsvpcConfiguration={subnets=[${PRIVATE_SUBNETS}],securityGroups=[${ECS_SECURITY_GROUP}],assignPublicIp=DISABLED}" \
-                    --region $AWS_REGION
-                    """
-                }
             }
         }
 

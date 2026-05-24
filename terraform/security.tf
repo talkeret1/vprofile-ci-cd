@@ -1,18 +1,3 @@
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-    }]
-  })
-}
-
 resource "aws_security_group" "vprofile_ecs_sg" {
   name        = "vprofile-ecs-sg"
   description = "Allow HTTP access to ECS tasks"
@@ -71,7 +56,7 @@ resource "aws_security_group" "vprofile_db_sg" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.vprofile_ecs_sg.id]
+    security_groups = [aws_security_group.vprofile_ecs_sg.id, aws_security_group.vprofile_bastion_sg.id]
   }
 
   egress {
@@ -83,5 +68,22 @@ resource "aws_security_group" "vprofile_db_sg" {
 
   tags = {
     Name = "vprofile-db-sg"
+  }
+}
+
+resource "aws_security_group" "vprofile_bastion_sg" {
+  name        = "vprofile-bastion-sg"
+  description = "Allow SSH access to bastion host"
+  vpc_id      = aws_vpc.vprofile_vpc.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "vprofile-bastion-sg"
   }
 }

@@ -1,13 +1,12 @@
-# variable "db_url" {
-#     type = string
-#     description = "RDS url"
-# }
+# vprofile App variables
 
 variable "app_port" {
   type        = number
   default     = 8080
   description = "vprofile App port"
 }
+
+# RDS variables
 
 variable "db_user" {
   type        = string
@@ -27,10 +26,13 @@ variable "db_name" {
   description = "RDS database name"
 }
 
-# variable "image_tag" {}
+# Bastion variables
 
-# terraform apply -var="image_tag=7"
-
+variable "bastion_ami_id" {
+  type        = string
+  default     = "ami-0236922087fa98b6e" # Amazon Linux 2023 (us-east-1)
+  description = "AMI for bastion host"
+}
 
 # variable "memcached_host" {
 #   type = string

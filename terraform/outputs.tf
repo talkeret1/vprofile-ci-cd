@@ -16,3 +16,7 @@ output "web_url" {
 output "db_endpoint" {
   value = aws_db_instance.vprofile_db.address
 }
+
+output "bastion_id" {
+  value = aws_instance.vprofile_bastion.id
+}
