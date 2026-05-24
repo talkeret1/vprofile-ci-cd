@@ -12,10 +12,10 @@ services:
       - vprodbdata:/var/lib/mysql
 
     environment:
-      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
 
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
@@ -36,7 +36,7 @@ services:
     container_name: vpromq01
 
     ports:
-      - "5672:5672"
+      - "${RABBITMQ_PORT}:5672"
 
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
@@ -90,10 +90,11 @@ services:
       - vproapp
 
   flyway:
-    image: flyway/flyway:10
+    image: talkeret/flyway
+    container_name: flyway
     command: -connectRetries=60 migrate
     volumes:
-      - ./sql:/flyway/sql
+      - ./Docker-files/flyway/sql:/flyway/sql
 
     environment:
       FLYWAY_URL: jdbc:mysql://${DB_HOST:-vprodb}:3306/${DB_NAME}?allowPublicKeyRetrieval=true&useSSL=false

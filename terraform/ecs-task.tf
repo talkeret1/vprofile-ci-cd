@@ -34,6 +34,10 @@ resource "aws_ecs_task_definition" "vproapp_task" {
           name  = "DB_PASS"
           value = var.db_pass
         },
+        {
+          name  = "DB_NAME"
+          value = var.db_name
+        }
         # {
         #   name  = "MEMCACHED_HOST"
         #   value = var.memcached_host

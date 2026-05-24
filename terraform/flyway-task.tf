@@ -10,17 +10,26 @@ resource "aws_ecs_task_definition" "flyway_task" {
   container_definitions = jsonencode([
     {
       name  = "flyway"
-      image = "flyway/flyway:10"
+      image = "talkeret/flyway:latest"
 
       entryPoint = ["flyway"]
 
-      command = [
-        "migrate",
-        "-url=jdbc:mysql://${aws_db_instance.vprofile_db.address}:3306/accounts",
-        "-user=admin_vp",
-        "-password=admin_vp"
+      environment = [
+        {
+          name  = "FLYWAY_URL"
+          value = "jdbc:mysql://${aws_db_instance.vprofile_db.address}:3306/accounts?allowPublicKeyRetrieval=true&useSSL=false"
+        },
+        {
+          name  = "FLYWAY_USER"
+          value = "admin_vp"
+        },
+        {
+          name  = "FLYWAY_PASSWORD"
+          value = "[PASSWORD]"
+        }
       ]
 
+      command   = ["migrate"]
       essential = true
 
       logConfiguration = {
