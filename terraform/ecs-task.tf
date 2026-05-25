@@ -22,6 +22,10 @@ resource "aws_ecs_task_definition" "vproapp_task" {
           value = aws_db_instance.vprofile_db.address
         },
         {
+          name  = "DB_PORT"
+          value = "3306"
+        },
+        {
           name  = "DB_USER"
           value = var.db_user
         },
@@ -34,8 +38,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
           value = var.db_name
         },
         {
-          name = "MEMCACHED_HOST"
-          # value = aws_elasticache_cluster.vprofile_memcached.configuration_endpoint
+          name  = "MEMCACHED_HOST"
           value = aws_elasticache_cluster.vprofile_memcached.cache_nodes[0].address
         },
         {
@@ -49,10 +52,10 @@ resource "aws_ecs_task_definition" "vproapp_task" {
             )
           )[0]
         },
-        # {
-        #   name  = "RABBITMQ_HOST"
-        #   value = aws_mq_broker.vprofile_rabbitmq.instances[0].endpoints[0]
-        # },
+        {
+          name  = "RABBITMQ_PORT"
+          value = "5671"
+        },
         {
           name  = "RABBITMQ_USER"
           value = var.rabbitmq_user
@@ -61,6 +64,14 @@ resource "aws_ecs_task_definition" "vproapp_task" {
           name  = "RABBITMQ_PASS"
           value = var.rabbitmq_pass
         },
+        {
+          name  = "RABBITMQ_SSL"
+          value = "true"
+        },
+        {
+          name  = "RABBITMQ_VHOST"
+          value = "/"
+        }
       ],
 
       logConfiguration = {

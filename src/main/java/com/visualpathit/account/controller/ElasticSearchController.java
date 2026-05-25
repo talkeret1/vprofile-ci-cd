@@ -36,7 +36,6 @@ public class ElasticSearchController {
     @RequestMapping(value = "/user/elasticsearch", method = RequestMethod.GET)
     public String insert(final Model model) throws IOException {
         List<User> users = userService.getList();
-
         try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
             for (User user : users) {
                 IndexRequest indexRequest = new IndexRequest("users", "_doc", String.valueOf(user.getId()))
@@ -50,10 +49,13 @@ public class ElasticSearchController {
                                 .field("nationality", user.getNationality())
                                 .field("phoneNumber", user.getPhoneNumber())
                                 .endObject());
-
-                IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-                String res = response.getResult().toString();
-                System.out.println(res);
+                try {
+                    IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
+                    System.out.println("INDEX RESULT: " + response.getResult());
+                } catch (Exception e) {
+                    System.out.println("ELASTIC ERROR:");
+                    e.printStackTrace();
+                }
             }
         }
 

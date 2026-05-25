@@ -3,12 +3,12 @@
 variable "app_port" {
   type        = number
   default     = 8080
-  description = "vprofile App port"
+  description = "vprofile App host port"
 }
 
 variable "ecs_desired_count" {
   type        = number
-  default     = 1
+  default     = 0
   description = "Number of vprofile App instances"
 }
 
