@@ -1,8 +1,3 @@
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
 resource "aws_ecs_task_definition" "vproapp_task" {
   family                   = "vproapp-task"
   requires_compatibilities = ["FARGATE"]
@@ -37,23 +32,35 @@ resource "aws_ecs_task_definition" "vproapp_task" {
         {
           name  = "DB_NAME"
           value = var.db_name
-        }
-        # {
-        #   name  = "MEMCACHED_HOST"
-        #   value = var.memcached_host
-        # },
+        },
+        {
+          name = "MEMCACHED_HOST"
+          # value = aws_elasticache_cluster.vprofile_memcached.configuration_endpoint
+          value = aws_elasticache_cluster.vprofile_memcached.cache_nodes[0].address
+        },
+        {
+          name = "RABBITMQ_HOST"
+          value = split(
+            ":",
+            replace(
+              aws_mq_broker.vprofile_rabbitmq.instances[0].endpoints[0],
+              "amqps://",
+              ""
+            )
+          )[0]
+        },
         # {
         #   name  = "RABBITMQ_HOST"
-        #   value = var.rabbitmq_host
+        #   value = aws_mq_broker.vprofile_rabbitmq.instances[0].endpoints[0]
         # },
-        # {
-        #   name  = "RABBITMQ_USER"
-        #   value = var.rabbitmq_user
-        # },
-        # {
-        #   name  = "RABBITMQ_PASS"
-        #   value = var.rabbitmq_pass
-        # }
+        {
+          name  = "RABBITMQ_USER"
+          value = var.rabbitmq_user
+        },
+        {
+          name  = "RABBITMQ_PASS"
+          value = var.rabbitmq_pass
+        },
       ],
 
       logConfiguration = {

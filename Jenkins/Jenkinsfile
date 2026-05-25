@@ -15,8 +15,8 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
 
         // ECS Variables:
-        PRIVATE_SUBNETS = "subnet-0e25c1cf1bcbce434,subnet-00e25a6e1ed126c17"
-        ECS_SECURITY_GROUP = "sg-0c060f62368b7ac7c"
+        PRIVATE_SUBNETS = "subnet-051d8556f358de465,subnet-02ae75a521cd96554"
+        ECS_SECURITY_GROUP = "sg-0f196c65ebaff9de5"
     }
 
     stages {

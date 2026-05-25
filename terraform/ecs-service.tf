@@ -3,7 +3,7 @@ resource "aws_ecs_service" "vproapp_service" {
   cluster         = aws_ecs_cluster.vprofile_cluster.id
   task_definition = aws_ecs_task_definition.vproapp_task.arn
   launch_type     = "FARGATE"
-  desired_count   = 0
+  desired_count   = var.ecs_desired_count
 
 
   network_configuration {

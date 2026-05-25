@@ -6,6 +6,8 @@ resource "aws_instance" "vprofile_bastion" {
 
   iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
 
+  vpc_security_group_ids = [aws_security_group.vprofile_bastion_sg.id]
+
   user_data = templatefile("${path.module}/scripts/init-db.sh", {
     DB_HOST = aws_db_instance.vprofile_db.address
     DB_USER = var.db_user

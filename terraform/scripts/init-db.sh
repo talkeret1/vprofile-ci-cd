@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-touch /tmp/vprofile
 
 if [ ! -f /var/vprofile_db_initialized ]; then
 
@@ -16,7 +15,7 @@ if [ ! -f /var/vprofile_db_initialized ]; then
 
   # Initialize mySQL database schema
 
-  until mysql -h ${DB_HOST} -u ${DB_USER} -e "SELECT 1"; do
+  until MYSQL_PWD=${DB_PASS} mysql -h ${DB_HOST} -u ${DB_USER} -e "SELECT 1"; do
     echo "Waiting for DB..."
     sleep 3
   done
@@ -29,3 +28,4 @@ if [ ! -f /var/vprofile_db_initialized ]; then
 
   # Mark as done
   touch /var/vprofile_db_initialized
+fi

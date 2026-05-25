@@ -71,6 +71,54 @@ resource "aws_security_group" "vprofile_db_sg" {
   }
 }
 
+resource "aws_security_group" "vprofile_memcached_sg" {
+  name        = "vprofile-memcached-sg"
+  description = "Allow Memcached access only from ECS"
+  vpc_id      = aws_vpc.vprofile_vpc.id
+
+  ingress {
+    from_port       = 11211
+    to_port         = 11211
+    protocol        = "tcp"
+    security_groups = [aws_security_group.vprofile_ecs_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "vprofile-memcached-sg"
+  }
+}
+
+resource "aws_security_group" "vprofile_mq_sg" {
+  name        = "vprofile-mq-sg"
+  description = "Allow RabbitMQ access only from ECS"
+  vpc_id      = aws_vpc.vprofile_vpc.id
+
+  ingress {
+    from_port       = 5672
+    to_port         = 5672
+    protocol        = "tcp"
+    security_groups = [aws_security_group.vprofile_ecs_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "vprofile-rabbitmq-sg"
+  }
+}
+
 resource "aws_security_group" "vprofile_bastion_sg" {
   name        = "vprofile-bastion-sg"
   description = "Allow SSH access to bastion host"
