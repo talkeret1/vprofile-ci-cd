@@ -5,6 +5,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
   cpu                      = "512"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([
     {
@@ -71,7 +72,19 @@ resource "aws_ecs_task_definition" "vproapp_task" {
         {
           name  = "RABBITMQ_VHOST"
           value = "/"
-        }
+        },
+        {
+          name  = "ELASTICSEARCH_HOST"
+          value = aws_opensearch_domain.vprofile_opensearch.endpoint
+        },
+        {
+          name  = "ELASTICSEARCH_PORT"
+          value = "443"
+        },
+        {
+          name  = "ELASTICSEARCH_SCHEME"
+          value = "https"
+        },
       ],
 
       logConfiguration = {

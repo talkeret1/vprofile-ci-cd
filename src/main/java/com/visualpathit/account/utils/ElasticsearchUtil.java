@@ -1,12 +1,10 @@
 package com.visualpathit.account.utils;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-
 import org.apache.http.HttpHost;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,31 +13,43 @@ import com.visualpathit.account.beans.Components;
 @Service
 public class ElasticsearchUtil {
 
-    private static Components object;
+    private static final Logger logger = LoggerFactory.getLogger(ElasticsearchUtil.class);
+
+    private static Components components;
 
     @Autowired
-    public void setComponents(Components object) {
-        ElasticsearchUtil.object = object;    	
+    public void setComponents(Components components) {
+        ElasticsearchUtil.components = components;
     }
 
     public static RestHighLevelClient getRestHighLevelClient() {
-        System.out.println("Creating Elasticsearch client...");
-        String elasticsearchHost = object.getElasticsearchHost();
-        String elasticsearchPort = object.getElasticsearchPort();
-        
-        System.out.println("Elasticsearch Host: " + elasticsearchHost);
-        System.out.println("Elasticsearch Port: " + elasticsearchPort);
 
-        RestHighLevelClient client = null;
-        try {
-            client = new RestHighLevelClient(
-                RestClient.builder(
-                    new HttpHost(elasticsearchHost, Integer.parseInt(elasticsearchPort), "http")
-                )
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
+        logger.info("Creating Elasticsearch client...");
+
+        if (components == null) {
+            throw new RuntimeException(
+                    "Components not initialized (Spring injection failed)");
         }
-        return client;
+
+        String host = components.getElasticsearchHost();
+        String port = components.getElasticsearchPort();
+        String scheme = components.getElasticsearchScheme();
+
+        if (host == null || port == null || scheme == null) {
+            throw new RuntimeException(
+                    "Elasticsearch configuration is missing (host/port/scheme)");
+        }
+
+        logger.debug("=== ELASTICSEARCH CONFIG ===");
+        logger.debug("HOST = {}", host);
+        logger.debug("PORT = {}", port);
+        logger.debug("SCHEME = {}", scheme);
+        logger.debug("============================");
+
+        return new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost(host,
+                                Integer.parseInt(port),
+                                scheme)));
     }
 }

@@ -1,9 +1,7 @@
 package com.visualpathit.account.controller;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.apache.http.HttpHost;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -14,15 +12,20 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.visualpathit.account.beans.Components;
 import com.visualpathit.account.model.User;
 import com.visualpathit.account.service.UserService;
 import com.visualpathit.account.utils.ElasticsearchUtil;
@@ -30,79 +33,303 @@ import com.visualpathit.account.utils.ElasticsearchUtil;
 @Controller
 public class ElasticSearchController {
 
-    @Autowired
-    private UserService userService;
+        private static final Logger logger = LoggerFactory.getLogger(ElasticSearchController.class);
 
-    @RequestMapping(value = "/user/elasticsearch", method = RequestMethod.GET)
-    public String insert(final Model model) throws IOException {
-        List<User> users = userService.getList();
-        try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
-            for (User user : users) {
-                IndexRequest indexRequest = new IndexRequest("users", "_doc", String.valueOf(user.getId()))
-                        .source(XContentFactory.jsonBuilder()
-                                .startObject()
-                                .field("name", user.getUsername())
-                                .field("DOB", user.getDateOfBirth())
-                                .field("fatherName", user.getFatherName())
-                                .field("motherName", user.getMotherName())
-                                .field("gender", user.getGender())
-                                .field("nationality", user.getNationality())
-                                .field("phoneNumber", user.getPhoneNumber())
-                                .endObject());
-                try {
-                    IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
-                    System.out.println("INDEX RESULT: " + response.getResult());
-                } catch (Exception e) {
-                    System.out.println("ELASTIC ERROR:");
-                    e.printStackTrace();
+        @Autowired
+        private UserService userService;
+
+        @Autowired
+        private Components components;
+
+        // =========================
+        // helper: build elastic url
+        // =========================
+
+        private String getElasticUrl() {
+
+                String host = components.getElasticsearchHost();
+                String port = components.getElasticsearchPort();
+                String scheme = components.getElasticsearchScheme();
+
+                if (host == null || host.isEmpty()) {
+                        return "N/A";
                 }
-            }
+
+                if (host.contains("amazonaws.com")
+                                || host.contains(".on.aws")) {
+                        return scheme + "://" + host;
+                }
+
+                return scheme + "://" + host + ":" + port;
         }
 
-        model.addAttribute("result", "Users indexed successfully");
-        return "elasticeSearchRes";
-    }
+        private String getSearchEngineName() {
 
-    @RequestMapping(value = "/rest/users/view/{id}", method = RequestMethod.GET)
-    public String view(@PathVariable final String id, final Model model) throws IOException {
-        try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
-            GetRequest getRequest = new GetRequest("users", "_doc", id);
-            GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+                String host = components.getElasticsearchHost();
 
-            System.out.println(getResponse.getSourceAsString());
-            model.addAttribute("res", getResponse.getSource().get("name"));
+                if (host != null &&
+                                (host.contains("amazonaws.com")
+                                                || host.contains(".on.aws"))) {
+                        return "OpenSearch";
+                }
+
+                return "Elasticsearch";
         }
 
-        return "elasticeSearchRes";
-    }
+        // =========================
+        // INDEX USERS
+        // =========================
 
-    @RequestMapping(value = "/rest/users/update/{id}", method = RequestMethod.GET)
-    public String update(@PathVariable final String id, final Model model) throws IOException {
-        try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
-            UpdateRequest updateRequest = new UpdateRequest("users", "_doc", id)
-                    .doc(XContentFactory.jsonBuilder()
-                            .startObject()
-                            .field("gender", "male")
-                            .endObject());
+        @RequestMapping(value = "/user/search/sync", method = RequestMethod.GET)
+        public String insert(Model model) {
 
-            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-            System.out.println(updateResponse.status());
-            model.addAttribute("res", updateResponse.status());
+                boolean hasErrors = false;
+                int successCount = 0;
+
+                try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
+
+                        boolean ping = client.ping(RequestOptions.DEFAULT);
+
+                        if (!ping) {
+
+                                model.addAttribute(
+                                                "result",
+                                                "FAILED: Elasticsearch/OpenSearch is DOWN");
+
+                                model.addAttribute("elasticUrl",
+                                                getElasticUrl());
+
+                                return "elasticeSearchRes";
+                        }
+
+                        List<User> users = userService.getList();
+
+                        for (User user : users) {
+
+                                try {
+
+                                        IndexRequest request = new IndexRequest("users")
+                                                        .id(String.valueOf(user.getId()))
+                                                        .source(XContentFactory.jsonBuilder()
+                                                                        .startObject()
+                                                                        .field("name", user.getUsername())
+                                                                        .field("DOB",
+                                                                                        user.getDateOfBirth() != null
+                                                                                                        ? user.getDateOfBirth()
+                                                                                                                        .toString()
+                                                                                                        : "")
+                                                                        .field("fatherName", user.getFatherName())
+                                                                        .field("motherName", user.getMotherName())
+                                                                        .field("gender", user.getGender())
+                                                                        .field("nationality", user.getNationality())
+                                                                        .field("phoneNumber", user.getPhoneNumber())
+                                                                        .endObject());
+
+                                        IndexResponse response = client.index(request, RequestOptions.DEFAULT);
+
+                                        logger.info("Indexed user: {} result: {}",
+                                                        user.getId(),
+                                                        response.getResult());
+
+                                        successCount++;
+
+                                } catch (Exception e) {
+
+                                        hasErrors = true;
+
+                                        logger.error("FAILED indexing user: {}",
+                                                        user.getId(),
+                                                        e);
+                                }
+                        }
+
+                        if (successCount == 0) {
+
+                                model.addAttribute(
+                                                "result",
+                                                "FAILED: No users were indexed");
+
+                        } else if (hasErrors) {
+
+                                model.addAttribute(
+                                                "result",
+                                                "PARTIAL SUCCESS: "
+                                                                + successCount
+                                                                + " users indexed");
+
+                        } else {
+
+                                model.addAttribute(
+                                                "result",
+                                                "Users indexed successfully into "
+                                                                + getSearchEngineName());
+                        }
+
+                        model.addAttribute("elasticUrl",
+                                        getElasticUrl());
+
+                        return "elasticeSearchRes";
+
+                } catch (Exception e) {
+
+                        logger.error("Cannot connect to ES/OpenSearch", e);
+
+                        model.addAttribute(
+                                        "result",
+                                        "FAILED: Cannot connect to Elasticsearch/OpenSearch");
+
+                        model.addAttribute("elasticUrl",
+                                        getElasticUrl());
+
+                        return "elasticeSearchRes";
+                }
         }
 
-        return "elasticeSearchRes";
-    }
+        // =========================
+        // HEALTH CHECK
+        // =========================
 
-    @RequestMapping(value = "/rest/users/delete/{id}", method = RequestMethod.GET)
-    public String delete(@PathVariable final String id, final Model model) throws IOException {
-        try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
-            DeleteRequest deleteRequest = new DeleteRequest("users", "_doc", id);
-            DeleteResponse deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);
+        @GetMapping("/user/elasticsearch/health")
+        public String health(Model model) {
 
-            System.out.println(deleteResponse.getResult().toString());
-            model.addAttribute("res", deleteResponse.getResult().toString());
+                try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
+
+                        boolean ok = client.ping(RequestOptions.DEFAULT);
+
+                        model.addAttribute(
+                                        "result",
+                                        ok
+                                                        ? getSearchEngineName() + " OK"
+                                                        : "FAILED");
+
+                } catch (Exception e) {
+
+                        logger.error("Health check failed", e);
+
+                        model.addAttribute(
+                                        "result",
+                                        "FAILED: " + e.getMessage());
+                }
+
+                model.addAttribute("elasticUrl",
+                                getElasticUrl());
+
+                return "elasticeSearchRes";
         }
 
-        return "elasticeSearchRes";
-    }
+        // =========================
+        // VIEW USER
+        // =========================
+
+        @RequestMapping(value = "/rest/users/view/{id}", method = RequestMethod.GET)
+        public String view(@PathVariable String id,
+                        Model model) {
+
+                try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
+
+                        GetRequest request = new GetRequest("users", id);
+
+                        GetResponse response = client.get(request, RequestOptions.DEFAULT);
+
+                        if (!response.isExists()) {
+
+                                model.addAttribute(
+                                                "res",
+                                                "User not found in "
+                                                                + getSearchEngineName());
+
+                                model.addAttribute("elasticUrl",
+                                                getElasticUrl());
+
+                                return "elasticeSearchRes";
+                        }
+
+                        model.addAttribute("res",
+                                        response.getSourceAsString());
+
+                        model.addAttribute("elasticUrl",
+                                        getElasticUrl());
+
+                } catch (Exception e) {
+
+                        logger.error("View user failed: {}", id, e);
+
+                        model.addAttribute(
+                                        "res",
+                                        "ERROR: " + e.getMessage());
+
+                        model.addAttribute("elasticUrl",
+                                        getElasticUrl());
+                }
+
+                return "elasticeSearchRes";
+        }
+
+        // =========================
+        // UPDATE USER
+        // =========================
+
+        @RequestMapping(value = "/rest/users/update/{id}", method = RequestMethod.GET)
+        public String update(@PathVariable String id,
+                        Model model) {
+
+                try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
+
+                        UpdateRequest request = new UpdateRequest("users", id)
+                                        .doc(XContentFactory.jsonBuilder()
+                                                        .startObject()
+                                                        .field("gender", "male")
+                                                        .endObject());
+
+                        UpdateResponse response = client.update(request, RequestOptions.DEFAULT);
+
+                        model.addAttribute("res",
+                                        response.status().toString());
+
+                } catch (Exception e) {
+
+                        logger.error("Update failed: {}", id, e);
+
+                        model.addAttribute(
+                                        "res",
+                                        "UPDATE FAILED: " + e.getMessage());
+                }
+
+                model.addAttribute("elasticUrl",
+                                getElasticUrl());
+
+                return "elasticeSearchRes";
+        }
+
+        // =========================
+        // DELETE USER
+        // =========================
+
+        @RequestMapping(value = "/rest/users/delete/{id}", method = RequestMethod.GET)
+        public String delete(@PathVariable String id,
+                        Model model) {
+
+                try (RestHighLevelClient client = ElasticsearchUtil.getRestHighLevelClient()) {
+
+                        DeleteRequest request = new DeleteRequest("users", id);
+
+                        DeleteResponse response = client.delete(request, RequestOptions.DEFAULT);
+
+                        model.addAttribute("res",
+                                        response.getResult().toString());
+
+                } catch (Exception e) {
+
+                        logger.error("Delete failed: {}", id, e);
+
+                        model.addAttribute(
+                                        "res",
+                                        "DELETE FAILED: " + e.getMessage());
+                }
+
+                model.addAttribute("elasticUrl",
+                                getElasticUrl());
+
+                return "elasticeSearchRes";
+        }
 }

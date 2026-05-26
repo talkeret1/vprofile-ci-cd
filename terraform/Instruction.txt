@@ -2,9 +2,16 @@ Terraform Instruction:
 ======================
 
 - MUST! - aws ecr create-repository --repository-name vprofile/app (Mutable Image)
+
 - IAM User: vprofile-jenkins-ecr 
-    - AmazonEC2ContainerRegistryFullAccess
-    - AmazonECS_FullAccess
+    - Policies:
+        - AmazonEC2ContainerRegistryFullAccess
+        - AmazonECS_FullAccess
+        - AmazonOpenSearchServiceFullAccess
+        - IAMFullAccess
+    - Roles:
+        - AWSServiceRoleForAmazonOpenSearchService
+        
     
 - Run: 
         terraform init

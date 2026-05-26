@@ -8,7 +8,7 @@ variable "app_port" {
 
 variable "ecs_desired_count" {
   type        = number
-  default     = 0
+  default     = 1
   description = "Number of vprofile App instances"
 }
 

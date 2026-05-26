@@ -10,7 +10,7 @@ SonarQube Configurations:
     - Name: vprofile
     - Project Settings -> Webhook:
         - Name: jenkins
-        - URL: http://host.docker.internal:8082/sonarqube-webhook/
+        - URL: http://host.docker.internal:8080/sonarqube-webhook/
 
 - Add Jenkins Token:
     - My Account -> Security -> Generate Token
@@ -26,8 +26,9 @@ Jenkins Configurations:
     - ID: sonarqube-token
 
 - Manage Jenkins -> Tools:
-    - Add SonarQube Scanner: SonarScanner
-    - Check Install automatically
+    - Add SonarQube Scanner: 
+        - Name: SonarScanner
+        - Check Install automatically
 
 - System:
     - SonarQube Servers -> Add SonarQube:

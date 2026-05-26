@@ -5,9 +5,11 @@ AWS - ECS Configurations:
 - Create ECR Repository:
     - Name: vprofile/app
 - Create IAM User:
+    - Add Policies: 
+        - AmazonEC2ContainerRegistryFullAccess
+        - AmazonECS_FullAccess
     - Create Access keys:
         - Copy the Access Key and Secret Key into Jenkins Credencials
-
 
 -----------------------
 Jenkins Configurations:

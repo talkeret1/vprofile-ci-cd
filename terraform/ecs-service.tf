@@ -5,6 +5,7 @@ resource "aws_ecs_service" "vproapp_service" {
   launch_type     = "FARGATE"
   desired_count   = var.ecs_desired_count
 
+  health_check_grace_period_seconds = 120
 
   network_configuration {
     subnets = [

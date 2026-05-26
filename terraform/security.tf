@@ -101,8 +101,8 @@ resource "aws_security_group" "vprofile_mq_sg" {
   vpc_id      = aws_vpc.vprofile_vpc.id
 
   ingress {
-    from_port       = 5672
-    to_port         = 5672
+    from_port       = 5671
+    to_port         = 5671
     protocol        = "tcp"
     security_groups = [aws_security_group.vprofile_ecs_sg.id]
   }
@@ -116,6 +116,19 @@ resource "aws_security_group" "vprofile_mq_sg" {
 
   tags = {
     Name = "vprofile-rabbitmq-sg"
+  }
+}
+
+resource "aws_security_group" "vprofile_opensearch_sg" {
+  name        = "vprofile-opensearch-sg"
+  description = "Allow OpenSearch access"
+  vpc_id      = aws_vpc.vprofile_vpc.id
+
+  ingress {
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.vprofile_ecs_sg.id]
   }
 }
 
