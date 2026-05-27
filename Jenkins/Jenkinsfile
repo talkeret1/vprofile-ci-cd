@@ -1,4 +1,5 @@
 pipeline {
+
     agent any
 
     tools {
@@ -15,8 +16,8 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
 
         // ECS Variables:
-        PRIVATE_SUBNETS = "subnet-00a8e4a7fca489970,subnet-09076044d00e29ada"
-        ECS_SECURITY_GROUP = "sg-0ac75f63b7e50a030"
+        PRIVATE_SUBNETS = "subnet-0f2f3ae85de0fa343,subnet-0e0cafc23f322ba9c"
+        ECS_SECURITY_GROUP = "sg-070dfcd65aa12189c"
     }
 
     stages {
@@ -49,8 +50,11 @@ pipeline {
                     sh '''
                     $scannerHome/bin/sonar-scanner \
                     -Dsonar.projectKey=vprofile \
-                    -Dsonar.sources=src \
-                    -Dsonar.java.binaries=target/classes
+                    -Dsonar.sources=src/main/java \
+                    -Dsonar.tests=src/test/java \
+                    -Dsonar.java.binaries=target/classes \
+                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                    -Dsonar.java.source=21
                     '''
                 }
             }
@@ -106,28 +110,28 @@ pipeline {
         }
 
         stage('Check ECS State') {
-        steps {
-            withCredentials([aws(credentialsId: 'aws-credentials')]) {
-                script {
-                    def running = sh(
-                        script: """
-                        aws ecs describe-services \
-                        --cluster vprofile-cluster \
-                        --services vproapp-service \
-                        --query "services[0].runningCount" \
-                        --output text
-                        """,
-                        returnStdout: true
-                    ).trim()
+            steps {
+                withCredentials([aws(credentialsId: 'aws-credentials')]) {
+                    script {
+                        def running = sh(
+                            script: """
+                            aws ecs describe-services \
+                            --cluster vprofile-cluster \
+                            --services vproapp-service \
+                            --query "services[0].runningCount" \
+                            --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
 
-                    env.IS_FIRST_DEPLOY = (running == "0") ? "true" : "false"
+                        env.IS_FIRST_DEPLOY = (running == "0") ? "true" : "false"
 
-                    echo "Running tasks: ${running}"
-                    echo "First deploy: ${env.IS_FIRST_DEPLOY}"
+                        echo "Running tasks: ${running}"
+                        echo "First deploy: ${env.IS_FIRST_DEPLOY}"
+                    }
                 }
             }
-    }
-}   
+        }
 
         stage('Deploy ECS Service') {
             steps {
@@ -156,7 +160,7 @@ pipeline {
             }
         }
     }
-
+    
     post {
         always {
             sh 'docker system prune -f'

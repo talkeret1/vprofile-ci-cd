@@ -84,7 +84,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
         {
           name  = "ELASTICSEARCH_SCHEME"
           value = "https"
-        },
+        }
       ],
 
       logConfiguration = {
