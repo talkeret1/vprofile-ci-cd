@@ -91,6 +91,10 @@ public class ElasticSearchController {
                         // health check
                         boolean ping = client.ping(RequestOptions.DEFAULT);
 
+                        System.out.println("====================================");
+                        System.out.println("OPENSEARCH PING RESULT = " + ping);
+                        System.out.println("====================================");
+
                         if (!ping) {
 
                                 model.addAttribute(
@@ -106,7 +110,14 @@ public class ElasticSearchController {
 
                         List<User> users = userService.getList();
 
+                        System.out.println("====================================");
+                        System.out.println("TOTAL USERS FOUND = " + users.size());
+                        System.out.println("====================================");
+
                         for (User user : users) {
+
+                                System.out.println("INDEXING USER ID = " + user.getId());
+                                System.out.println("USERNAME = " + user.getUsername());
 
                                 try {
 
@@ -142,9 +153,12 @@ public class ElasticSearchController {
 
                                         hasErrors = true;
 
-                                        System.err.println(
-                                                        "FAILED indexing user: "
-                                                                        + user.getId());
+                                        System.err.println("====================================");
+                                        System.err.println("FAILED indexing user: " + user.getId());
+                                        System.err.println("USERNAME: " + user.getUsername());
+                                        System.err.println("ERROR TYPE: " + e.getClass().getName());
+                                        System.err.println("ERROR MESSAGE: " + e.getMessage());
+                                        System.err.println("====================================");
 
                                         e.printStackTrace();
                                 }
