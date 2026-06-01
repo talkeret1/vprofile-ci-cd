@@ -5,7 +5,6 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.visualpathit.account.beans.Components;
@@ -15,41 +14,37 @@ public class ElasticsearchUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticsearchUtil.class);
 
-    private static Components components;
+    private final Components components;
 
-    @Autowired
-    public void setComponents(Components components) {
-        ElasticsearchUtil.components = components;
+    public ElasticsearchUtil(Components components) {
+        this.components = components;
     }
 
-    public static RestHighLevelClient getRestHighLevelClient() {
-
-        logger.info("Creating Elasticsearch client...");
-
-        if (components == null) {
-            throw new RuntimeException(
-                    "Components not initialized (Spring injection failed)");
-        }
+    public RestHighLevelClient getRestHighLevelClient() {
 
         String host = components.getElasticsearchHost();
         String port = components.getElasticsearchPort();
         String scheme = components.getElasticsearchScheme();
 
-        if (host == null || port == null || scheme == null) {
-            throw new RuntimeException(
-                    "Elasticsearch configuration is missing (host/port/scheme)");
+        logger.info("=== ELASTIC DEBUG ===");
+        logger.info("HOST = {}", host);
+        logger.info("PORT = {}", port);
+        logger.info("SCHEME = {}", scheme);
+
+        if (host == null || host.isEmpty()) {
+            throw new RuntimeException("ELASTICSEARCH_HOST is missing in ECS env");
         }
 
-        logger.debug("=== ELASTICSEARCH CONFIG ===");
-        logger.debug("HOST = {}", host);
-        logger.debug("PORT = {}", port);
-        logger.debug("SCHEME = {}", scheme);
-        logger.debug("============================");
+        if (port == null || port.isEmpty()) {
+            port = "443";
+        }
+
+        if (scheme == null || scheme.isEmpty()) {
+            scheme = "https";
+        }
 
         return new RestHighLevelClient(
                 RestClient.builder(
-                        new HttpHost(host,
-                                Integer.parseInt(port),
-                                scheme)));
+                        new HttpHost(host, Integer.parseInt(port), scheme)));
     }
 }

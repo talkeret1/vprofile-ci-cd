@@ -10,55 +10,55 @@ public class Components {
 	// Memcached
 	// ======================
 
-	@Value("${memcached.active.host}")
+	@Value("${memcached.active.host:}")
 	private String activeHost;
 
-	@Value("${memcached.active.port}")
+	@Value("${memcached.active.port:11211}")
 	private String activePort;
 
-	@Value("${memcached.standBy.host}")
+	@Value("${memcached.standBy.host:}")
 	private String standByHost;
 
-	@Value("${memcached.standBy.port}")
+	@Value("${memcached.standBy.port:11211}")
 	private String standByPort;
 
 	// ======================
 	// RabbitMQ
 	// ======================
 
-	@Value("${rabbitmq.address}")
+	@Value("${rabbitmq.address:}")
 	private String rabbitMqHost;
 
-	@Value("${rabbitmq.port}")
+	@Value("${rabbitmq.port:5672}")
 	private String rabbitMqPort;
 
-	@Value("${rabbitmq.username}")
+	@Value("${rabbitmq.username:}")
 	private String rabbitMqUser;
 
-	@Value("${rabbitmq.password}")
+	@Value("${rabbitmq.password:}")
 	private String rabbitMqPassword;
 
 	// ======================
 	// Elasticsearch / OpenSearch
 	// ======================
 
-	@Value("${elasticsearch.host}")
+	@Value("${elasticsearch.host:}")
 	private String elasticsearchHost;
 
-	@Value("${elasticsearch.port}")
+	@Value("${elasticsearch.port:443}")
 	private String elasticsearchPort;
 
-	@Value("${elasticsearch.cluster}")
+	@Value("${elasticsearch.cluster:}")
 	private String elasticsearchCluster;
 
-	@Value("${elasticsearch.node}")
+	@Value("${elasticsearch.node:}")
 	private String elasticsearchNode;
 
-	@Value("${elasticsearch.scheme}")
+	@Value("${elasticsearch.scheme:https}")
 	private String elasticsearchScheme;
 
 	// ======================
-	// Getters only (no setters)
+	// GETTERS
 	// ======================
 
 	public String getActiveHost() {
