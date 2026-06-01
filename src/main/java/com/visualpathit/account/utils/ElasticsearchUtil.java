@@ -3,8 +3,7 @@ package com.visualpathit.account.utils;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.visualpathit.account.beans.Components;
@@ -12,36 +11,30 @@ import com.visualpathit.account.beans.Components;
 @Service
 public class ElasticsearchUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(ElasticsearchUtil.class);
+    private static Components object;
 
-    private final Components components;
-
-    public ElasticsearchUtil(Components components) {
-        this.components = components;
+    @Autowired
+    public void setComponents(Components object) {
+        ElasticsearchUtil.object = object;
     }
 
-    public RestHighLevelClient getRestHighLevelClient() {
+    public static RestHighLevelClient getRestHighLevelClient() {
 
-        String host = components.getElasticsearchHost();
-        String port = components.getElasticsearchPort();
-        String scheme = components.getElasticsearchScheme();
+        System.out.println("Creating Elasticsearch client...");
 
-        logger.info("=== ELASTIC DEBUG ===");
-        logger.info("HOST = {}", host);
-        logger.info("PORT = {}", port);
-        logger.info("SCHEME = {}", scheme);
-
-        if (host == null || host.isEmpty()) {
-            throw new RuntimeException("ELASTICSEARCH_HOST is missing in ECS env");
+        if (object == null) {
+            throw new RuntimeException("Components not initialized (Spring injection failed)");
         }
 
-        if (port == null || port.isEmpty()) {
-            port = "443";
-        }
+        String host = object.getElasticsearchHost();
+        String port = object.getElasticsearchPort();
+        String scheme = object.getElasticsearchScheme();
 
-        if (scheme == null || scheme.isEmpty()) {
-            scheme = "https";
-        }
+        System.out.println("=== DEBUG ELASTICSEARCH ===");
+        System.out.println("HOST = " + host);
+        System.out.println("PORT = " + port);
+        System.out.println("SCHEME = " + scheme);
+        System.out.println("===========================");
 
         return new RestHighLevelClient(
                 RestClient.builder(
