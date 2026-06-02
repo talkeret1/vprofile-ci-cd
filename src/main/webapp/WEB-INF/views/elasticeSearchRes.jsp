@@ -13,8 +13,7 @@
 
                 <body>
                     <h1>${result}</h1>
-                    <h2>Elasticsearch endpoint: ${elasticUrl}</h2>
-
+                    <h2>${getSearchEngineName()} endpoint: ${getSearchEngineUrl()}</h2>
                 </body>
 
                 </html>
