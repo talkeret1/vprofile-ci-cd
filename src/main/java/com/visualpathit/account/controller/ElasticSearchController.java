@@ -10,7 +10,6 @@ import org.opensearch.action.delete.DeleteResponse;
 import org.opensearch.action.get.GetRequest;
 import org.opensearch.action.get.GetResponse;
 import org.opensearch.action.index.IndexRequest;
-import org.opensearch.action.index.IndexResponse;
 import org.opensearch.action.update.UpdateRequest;
 import org.opensearch.action.update.UpdateResponse;
 import org.opensearch.client.RequestOptions;
@@ -43,6 +42,29 @@ public class ElasticSearchController {
         }
 
         // =========================
+        // DASHBOARD ATTRIBUTES
+        // =========================
+
+        private void addDashboardAttributes(Model model, String result) {
+
+                model.addAttribute("searchEngineName", getSearchEngineName());
+                model.addAttribute("searchEngineUrl", getElasticUrl());
+                model.addAttribute("environment", getEnvironment());
+                model.addAttribute("result", result);
+
+                if (result != null && result.startsWith("SUCCESS")) {
+                        model.addAttribute("statusColor", "green");
+                        model.addAttribute("statusBadge", "OK");
+                } else if (result != null && (result.startsWith("FAILED") || result.startsWith("ERROR"))) {
+                        model.addAttribute("statusColor", "red");
+                        model.addAttribute("statusBadge", "FAIL");
+                } else {
+                        model.addAttribute("statusColor", "gray");
+                        model.addAttribute("statusBadge", "UNKNOWN");
+                }
+        }
+
+        // =========================
         // HELPERS
         // =========================
 
@@ -70,8 +92,18 @@ public class ElasticSearchController {
                 return "Elasticsearch";
         }
 
+        private String getEnvironment() {
+                String host = components.getElasticsearchHost();
+
+                if (host != null && (host.contains("amazonaws.com") || host.contains(".on.aws"))) {
+                        return "☁️ AWS Production";
+                }
+
+                return "🐳 Docker Local";
+        }
+
         // =========================
-        // INDEX USERS
+        // SYNC USERS
         // =========================
 
         @GetMapping("/user/search/sync")
@@ -103,49 +135,25 @@ public class ElasticSearchController {
                                                         .source(payload, XContentType.JSON);
 
                                         client.index(request, RequestOptions.DEFAULT);
-
                                         successCount++;
 
                                 } catch (Exception e) {
                                         hasErrors = true;
-                                        System.out.println("Failed user id: " + user.getId());
-                                        e.printStackTrace();
                                 }
                         }
 
                         if (successCount == 0) {
-                                model.addAttribute("result", "FAILED: No users indexed");
+                                addDashboardAttributes(model, "FAILED: No users indexed");
                         } else if (hasErrors) {
-                                model.addAttribute("result", "PARTIAL SUCCESS: " + successCount);
+                                addDashboardAttributes(model, "PARTIAL SUCCESS: " + successCount);
                         } else {
-                                model.addAttribute("result", "SUCCESS into " + getSearchEngineName());
+                                addDashboardAttributes(model, "SUCCESS into " + getSearchEngineName());
                         }
 
                 } catch (Exception e) {
-                        model.addAttribute("result", "FAILED: connection error - " + e.getMessage());
+                        addDashboardAttributes(model, "FAILED: connection error");
                 }
 
-                model.addAttribute("elasticUrl", getElasticUrl());
-                return "elasticeSearchRes";
-        }
-
-        // =========================
-        // HEALTH
-        // =========================
-
-        @GetMapping("/user/elasticsearch/health")
-        public String health(Model model) {
-
-                try (RestHighLevelClient client = clientFactory.createClient()) {
-
-                        boolean ok = client.ping(RequestOptions.DEFAULT);
-                        model.addAttribute("result", ok ? getSearchEngineName() + " OK" : "FAILED");
-
-                } catch (Exception e) {
-                        model.addAttribute("result", "FAILED: " + e.getMessage());
-                }
-
-                model.addAttribute("elasticUrl", getElasticUrl());
                 return "elasticeSearchRes";
         }
 
@@ -162,21 +170,20 @@ public class ElasticSearchController {
                         GetResponse response = client.get(request, RequestOptions.DEFAULT);
 
                         if (!response.isExists()) {
-                                model.addAttribute("res", "User not found in " + getSearchEngineName());
+                                addDashboardAttributes(model, "FAILED: User not found");
                         } else {
-                                model.addAttribute("res", response.getSourceAsString());
+                                addDashboardAttributes(model, "SUCCESS: User found");
                         }
 
                 } catch (Exception e) {
-                        model.addAttribute("res", "ERROR: " + e.getMessage());
+                        addDashboardAttributes(model, "ERROR: " + e.getMessage());
                 }
 
-                model.addAttribute("elasticUrl", getElasticUrl());
                 return "elasticeSearchRes";
         }
 
         // =========================
-        // UPDATE USER (FIXED)
+        // UPDATE USER
         // =========================
 
         @GetMapping("/rest/users/update/{id}")
@@ -192,10 +199,10 @@ public class ElasticSearchController {
 
                         UpdateResponse response = client.update(request, RequestOptions.DEFAULT);
 
-                        model.addAttribute("res", response.getResult().toString());
+                        addDashboardAttributes(model, "SUCCESS: " + response.getResult());
 
                 } catch (Exception e) {
-                        model.addAttribute("res", "UPDATE FAILED: " + e.getMessage());
+                        addDashboardAttributes(model, "FAILED: update error");
                 }
 
                 return "elasticeSearchRes";
@@ -213,10 +220,10 @@ public class ElasticSearchController {
                         DeleteRequest request = new DeleteRequest("users", id);
                         DeleteResponse response = client.delete(request, RequestOptions.DEFAULT);
 
-                        model.addAttribute("res", response.getResult().toString());
+                        addDashboardAttributes(model, "SUCCESS: " + response.getResult());
 
                 } catch (Exception e) {
-                        model.addAttribute("res", "DELETE FAILED: " + e.getMessage());
+                        addDashboardAttributes(model, "FAILED: delete error");
                 }
 
                 return "elasticeSearchRes";

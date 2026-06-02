@@ -224,7 +224,7 @@
                                         <c>
                                             <a href="${contextPath}/users" class="btn btn-success">All Users</a>
                                             <a href="${contextPath}/user/rabbit" class="btn btn-success">RabbitMq</a>
-                                            <a href="/user/search/sync" class="btn btn-success">Data Search</a>
+                                            <a href="/user/search/sync" class="btn btn-success">Index Users</a>
                                         </c>
 
                                         <br><br>
