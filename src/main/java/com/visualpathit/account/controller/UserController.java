@@ -12,7 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +38,8 @@ public class UserController {
     }
 
     @PostMapping("/registration")
-    public String registration(@ModelAttribute("userForm") @Valid User userForm, BindingResult bindingResult, Model model) {
+    public String registration(@ModelAttribute("userForm") @Valid User userForm, BindingResult bindingResult,
+            Model model) {
         userValidator.validate(userForm, bindingResult);
 
         if (bindingResult.hasErrors()) {
@@ -56,7 +57,7 @@ public class UserController {
 
     @GetMapping("/")
     public String login(Model model, @RequestParam(value = "error", required = false) String error,
-                        @RequestParam(value = "logout", required = false) String logout) {
+            @RequestParam(value = "logout", required = false) String logout) {
         if (error != null) {
             model.addAttribute("error", "Your username and password is invalid.");
         }
@@ -131,13 +132,13 @@ public class UserController {
         return "welcome";
     }
 
-//    @GetMapping("/user/rabbit")
-//    public String rabbitmqSetUp() {
-//        for (int i = 0; i < 20; i++) {
-//            producerService.produceMessage(generateString());
-//        }
-//        return "rabbitmq";
-//    }
+    // @GetMapping("/user/rabbit")
+    // public String rabbitmqSetUp() {
+    // for (int i = 0; i < 20; i++) {
+    // producerService.produceMessage(generateString());
+    // }
+    // return "rabbitmq";
+    // }
 
     private void updateUserDetails(User user, User userForm) {
         user.setUsername(userForm.getUsername());
