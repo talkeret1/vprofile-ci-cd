@@ -25,7 +25,7 @@ public class UserTest {
         User user = new User();
         user.setId(1L);
         user.setUsername("testUser");
-        user.setPassword("secret"); // ⚠️ רק לצורך model test
+        user.setPassword("secret");
         user.setUserEmail("test@example.com");
         user.setRoles(roles);
 
