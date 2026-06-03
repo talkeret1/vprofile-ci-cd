@@ -1,4 +1,4 @@
-package com.visualpathit.account;
+package com.visualpathit.account.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,7 +11,7 @@ public class AuthenticationFailureHandler extends SimpleUrlAuthenticationFailure
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                        AuthenticationException exception) throws IOException {
+            AuthenticationException exception) throws IOException {
         // Redirect to custom error page
         getRedirectStrategy().sendRedirect(request, response, "/login?error");
     }

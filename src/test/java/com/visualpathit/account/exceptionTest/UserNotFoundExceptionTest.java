@@ -1,18 +1,18 @@
 package com.visualpathit.account.exceptionTest;
 
-import static org.junit.Assert.assertEquals;
-
+import com.visualpathit.account.UserNotFoundException;
 import org.junit.Test;
 
-import com.visualpathit.account.UserNotFoundException;
+import static org.junit.Assert.*;
 
 public class UserNotFoundExceptionTest {
 
     @Test
     public void shouldCreateExceptionWithMessage() {
 
-        UserNotFoundException ex = new UserNotFoundException("user not found");
+        UserNotFoundException ex = new UserNotFoundException("User not found");
 
-        assertEquals("user not found", ex.getMessage());
+        assertNotNull(ex);
+        assertEquals("User not found", ex.getMessage());
     }
 }
