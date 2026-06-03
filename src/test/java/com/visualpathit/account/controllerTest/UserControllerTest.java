@@ -1,10 +1,12 @@
 package com.visualpathit.account.controllerTest;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 
 import java.util.List;
 
@@ -15,9 +17,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 import com.visualpathit.account.controller.UserController;
 import com.visualpathit.account.model.User;
@@ -48,6 +47,7 @@ public class UserControllerTest {
 
 	@Before
 	public void setup() {
+
 		MockitoAnnotations.initMocks(this);
 
 		mockMvc = MockMvcBuilders
@@ -58,6 +58,7 @@ public class UserControllerTest {
 
 	@Test
 	public void shouldLoadRegistrationPage() throws Exception {
+
 		mockMvc.perform(get("/registration"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("registration"));
@@ -65,6 +66,7 @@ public class UserControllerTest {
 
 	@Test
 	public void shouldLoadLoginPage() throws Exception {
+
 		mockMvc.perform(get("/"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("login"));
@@ -72,6 +74,7 @@ public class UserControllerTest {
 
 	@Test
 	public void shouldLoadWelcomePage() throws Exception {
+
 		mockMvc.perform(get("/welcome"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("welcome"));
@@ -79,6 +82,7 @@ public class UserControllerTest {
 
 	@Test
 	public void shouldLoadIndexHomePage() throws Exception {
+
 		mockMvc.perform(get("/index"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("index_home"));
@@ -94,7 +98,6 @@ public class UserControllerTest {
 				.andExpect(view().name("userList"));
 	}
 
-	// ❌ LOGIN FAIL FLOW
 	@Test
 	public void shouldFailLoginPost() throws Exception {
 
@@ -108,7 +111,6 @@ public class UserControllerTest {
 				.andExpect(view().name("login"));
 	}
 
-	// ✅ LOGIN SUCCESS FLOW (FIXED FOR REDIRECT)
 	@Test
 	public void shouldSucceedLoginPost() throws Exception {
 
@@ -120,5 +122,63 @@ public class UserControllerTest {
 				.param("password", "123"))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/welcome"));
+	}
+
+	@Test
+	public void shouldRegisterUserSuccessfully() throws Exception {
+
+		when(securityService.autologin(anyString(), anyString()))
+				.thenReturn(true);
+
+		mockMvc.perform(post("/registration")
+				.param("username", "testuser")
+				.param("password", "password123")
+				.param("passwordConfirm", "password123"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/welcome"));
+	}
+
+	@Test
+	public void shouldRedirectToLoginWhenAutologinFails() throws Exception {
+
+		when(securityService.autologin(anyString(), anyString()))
+				.thenReturn(false);
+
+		mockMvc.perform(post("/registration")
+				.param("username", "testuser")
+				.param("password", "password123")
+				.param("passwordConfirm", "password123"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login?error"));
+	}
+
+	@Test
+	public void shouldLoadUserUpdatePage() throws Exception {
+
+		User user = new User();
+		user.setUsername("john");
+
+		when(userService.findByUsername("john"))
+				.thenReturn(user);
+
+		mockMvc.perform(get("/user/john"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("userUpdate"));
+	}
+
+	@Test
+	public void shouldUpdateUserProfile() throws Exception {
+
+		User existingUser = new User();
+		existingUser.setUsername("john");
+
+		when(userService.findByUsername("john"))
+				.thenReturn(existingUser);
+
+		mockMvc.perform(post("/user/john")
+				.param("username", "johnUpdated")
+				.param("userEmail", "john@test.com"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("welcome"));
 	}
 }
