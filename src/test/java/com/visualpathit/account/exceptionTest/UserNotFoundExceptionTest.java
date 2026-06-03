@@ -1,7 +1,8 @@
 package com.visualpathit.account.exceptionTest;
 
-import com.visualpathit.account.UserNotFoundException;
 import org.junit.Test;
+
+import com.visualpathit.account.exception.UserNotFoundException;
 
 import static org.junit.Assert.*;
 

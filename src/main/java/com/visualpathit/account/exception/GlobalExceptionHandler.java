@@ -1,4 +1,4 @@
-package com.visualpathit.account;
+package com.visualpathit.account.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,7 +17,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public String handleBadCredentialsException(BadCredentialsException ex, HttpServletRequest request) {
         request.setAttribute("errorMessage", "Invalid username or password.");
-        return "forward:/WEB-INF/views/error/500.jsp"; // You can choose a different page for BadCredentialsException if preferred
+        return "forward:/WEB-INF/views/error/500.jsp"; // You can choose a different page for BadCredentialsException if
+                                                       // preferred
     }
 
     @ExceptionHandler(Exception.class)

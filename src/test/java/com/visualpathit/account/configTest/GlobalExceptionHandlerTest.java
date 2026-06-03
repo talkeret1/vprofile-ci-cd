@@ -1,6 +1,5 @@
 package com.visualpathit.account.configTest;
 
-import com.visualpathit.account.UserNotFoundException;
 import org.junit.Test;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -8,7 +7,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.visualpathit.account.GlobalExceptionHandler;
+import com.visualpathit.account.exception.GlobalExceptionHandler;
+import com.visualpathit.account.exception.UserNotFoundException;
 
 public class GlobalExceptionHandlerTest {
 
