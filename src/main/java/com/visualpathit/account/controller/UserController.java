@@ -6,6 +6,7 @@ import com.visualpathit.account.service.SecurityService;
 import com.visualpathit.account.service.UserService;
 import com.visualpathit.account.utils.MemcachedUtils;
 import com.visualpathit.account.validator.UserValidator;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,8 +17,13 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Controller
 public class UserController {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserService userService;
@@ -38,8 +44,8 @@ public class UserController {
     }
 
     @PostMapping("/registration")
-    public String registration(@ModelAttribute("userForm") @Valid User userForm, BindingResult bindingResult,
-            Model model) {
+    public String registration(@ModelAttribute("userForm") @Valid User userForm,
+            BindingResult bindingResult, Model model) {
         userValidator.validate(userForm, bindingResult);
 
         if (bindingResult.hasErrors()) {
@@ -47,6 +53,7 @@ public class UserController {
         }
 
         userService.save(userForm);
+
         boolean loginSuccessful = securityService.autologin(userForm.getUsername(), userForm.getPasswordConfirm());
         if (!loginSuccessful) {
             return "redirect:/login?error";
@@ -56,7 +63,8 @@ public class UserController {
     }
 
     @GetMapping("/")
-    public String login(Model model, @RequestParam(value = "error", required = false) String error,
+    public String login(Model model,
+            @RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "logout", required = false) String logout) {
         if (error != null) {
             model.addAttribute("error", "Your username and password is invalid.");
@@ -112,7 +120,8 @@ public class UserController {
             }
             model.addAttribute("Result", result);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error fetching user by id: {}", id, e);
+            model.addAttribute("Result", "Error fetching user data");
         }
         return "user";
     }
@@ -125,20 +134,17 @@ public class UserController {
     }
 
     @PostMapping("/user/{username}")
-    public String userUpdateProfile(@PathVariable("username") String username, @ModelAttribute("user") User userForm) {
+    public String userUpdateProfile(@PathVariable("username") String username,
+            @ModelAttribute("user") User userForm) {
         User user = userService.findByUsername(username);
         updateUserDetails(user, userForm);
         userService.save(user);
         return "welcome";
     }
 
-    // @GetMapping("/user/rabbit")
-    // public String rabbitmqSetUp() {
-    // for (int i = 0; i < 20; i++) {
-    // producerService.produceMessage(generateString());
-    // }
-    // return "rabbitmq";
-    // }
+    // ====================================
+    // Private helpers
+    // ====================================
 
     private void updateUserDetails(User user, User userForm) {
         user.setUsername(userForm.getUsername());
