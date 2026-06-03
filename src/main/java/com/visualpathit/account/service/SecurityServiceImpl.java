@@ -22,18 +22,31 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public String findLoggedInUsername() {
-        Object userDetails = SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+        if (SecurityContextHolder.getContext() == null) {
+            return null;
+        }
+
+        Object auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null) {
+            return null;
+        }
+
+        Object userDetails = ((org.springframework.security.core.Authentication) auth).getDetails();
+
         if (userDetails instanceof UserDetails) {
             return ((UserDetails) userDetails).getUsername();
         }
+
         return null;
     }
 
     @Override
     public boolean autologin(final String username, final String password) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+                userDetails, password, userDetails.getAuthorities());
 
         authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 
