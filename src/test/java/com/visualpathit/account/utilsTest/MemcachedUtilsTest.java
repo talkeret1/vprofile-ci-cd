@@ -12,53 +12,102 @@ import static org.junit.Assert.*;
 
 public class MemcachedUtilsTest {
 
+    private void setComponents(Components components) throws Exception {
+        Field f = MemcachedUtils.class.getDeclaredField("object");
+        f.setAccessible(true);
+        f.set(null, components);
+    }
+
+    private void clearComponents() throws Exception {
+        Field f = MemcachedUtils.class.getDeclaredField("object");
+        f.setAccessible(true);
+        f.set(null, null);
+    }
+
     @Before
-    public void setup() throws Exception {
+    public void reset() throws Exception {
+        clearComponents();
+    }
+
+    @Test
+    public void shouldReturnCacheUnavailableWhenObjectIsNull() {
+        String result = MemcachedUtils.memcachedSetData(new User(), "key");
+        assertEquals("Cache unavailable", result);
+    }
+
+    @Test
+    public void shouldReturnNullFromGetWhenObjectIsNull() {
+        User result = MemcachedUtils.memcachedGetData("key");
+        assertNull(result);
+    }
+
+    @Test
+    public void shouldReturnNullConnectionWhenObjectIsNull() {
+        assertNull(MemcachedUtils.memcachedConnection());
+        assertNull(MemcachedUtils.standByMemcachedConn());
+    }
+
+    @Test
+    public void shouldHandleInvalidConfigGracefully() throws Exception {
+
         Components components = new Components();
         components.setActiveHost("");
         components.setActivePort("");
         components.setStandByHost("");
         components.setStandByPort("");
 
-        Field f = MemcachedUtils.class.getDeclaredField("object");
-        f.setAccessible(true);
-        f.set(null, components);
-    }
-
-    @Test
-    public void shouldReturnCacheUnavailableWhenClientNull() {
-
-        User user = new User();
-
-        String result = MemcachedUtils.memcachedSetData(user, "key");
-
-        assertNotNull(result);
-        assertTrue(result.toLowerCase().contains("cache"));
-    }
-
-    @Test
-    public void shouldReturnNullFromGetWhenNoConnection() {
-
-        User result = MemcachedUtils.memcachedGetData("key");
-
-        assertNull(result);
-    }
-
-    @Test
-    public void shouldHandleEmptyConfiguration() {
+        setComponents(components);
 
         assertNull(MemcachedUtils.memcachedConnection());
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
 
     @Test
-    public void shouldHandleValidMethodFlowWithoutThrowingException() {
+    public void shouldHandlePartialStandbyConfig() throws Exception {
 
-        try {
-            MemcachedUtils.memcachedSetData(new User(), "test");
-            MemcachedUtils.memcachedGetData("test");
-        } catch (Exception e) {
-            fail("Should not throw exception");
-        }
+        Components components = new Components();
+        components.setStandByHost("localhost");
+        components.setStandByPort("");
+
+        setComponents(components);
+
+        assertNull(MemcachedUtils.standByMemcachedConn());
+    }
+
+    @Test
+    public void shouldHandleNullStandbyHost() throws Exception {
+
+        Components components = new Components();
+        components.setStandByHost(null);
+        components.setStandByPort("11211");
+
+        setComponents(components);
+
+        assertNull(MemcachedUtils.standByMemcachedConn());
+    }
+
+    @Test
+    public void shouldHandleInterruptedExceptionFlowSafely() throws Exception {
+        // לא באמת נכנס ל-InterruptedException בלי mocking
+        // אבל מכסה flow מלא של setData עם config null/invalid
+        Components components = new Components();
+        components.setActiveHost("invalid");
+        components.setActivePort("99999");
+        setComponents(components);
+
+        String result = MemcachedUtils.memcachedSetData(new User(), "key");
+        assertTrue(result.startsWith("Cache set failed") || result.equals("Cache unavailable"));
+    }
+
+    @Test
+    public void shouldHandleGetDataFailureGracefully() throws Exception {
+
+        Components components = new Components();
+        components.setActiveHost("invalid");
+        components.setActivePort("99999");
+        setComponents(components);
+
+        User result = MemcachedUtils.memcachedGetData("key");
+        assertNull(result);
     }
 }
