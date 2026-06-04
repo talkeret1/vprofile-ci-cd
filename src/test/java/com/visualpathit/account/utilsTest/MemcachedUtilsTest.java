@@ -12,16 +12,20 @@ import static org.junit.Assert.*;
 
 public class MemcachedUtilsTest {
 
-    private void setComponents(Components components) throws Exception {
+    private void setComponentsField(Components components) throws Exception {
         Field f = MemcachedUtils.class.getDeclaredField("object");
         f.setAccessible(true);
         f.set(null, components);
     }
 
-    private void clearComponents() throws Exception {
+    private Components getComponentsField() throws Exception {
         Field f = MemcachedUtils.class.getDeclaredField("object");
         f.setAccessible(true);
-        f.set(null, null);
+        return (Components) f.get(null);
+    }
+
+    private void clearComponents() throws Exception {
+        setComponentsField(null);
     }
 
     @Before
@@ -29,9 +33,30 @@ public class MemcachedUtilsTest {
         clearComponents();
     }
 
-    // ---------------------------
-    // BASIC NULL OBJECT SCENARIOS
-    // ---------------------------
+    // =========================================================
+    // constructor + spring setter coverage
+    // =========================================================
+
+    @Test
+    public void constructor_shouldCreateInstance() {
+        MemcachedUtils utils = new MemcachedUtils();
+        assertNotNull(utils);
+    }
+
+    @Test
+    public void setComponents_shouldAssignStaticField() throws Exception {
+
+        Components components = new Components();
+
+        MemcachedUtils utils = new MemcachedUtils();
+        utils.setComponents(components);
+
+        assertSame(components, getComponentsField());
+    }
+
+    // =========================================================
+    // NULL OBJECT
+    // =========================================================
 
     @Test
     public void memcachedSet_shouldReturnUnavailableWhenObjectNull() {
@@ -47,12 +72,16 @@ public class MemcachedUtilsTest {
     @Test
     public void connection_shouldReturnNullWhenObjectNull() {
         assertNull(MemcachedUtils.memcachedConnection());
+    }
+
+    @Test
+    public void standbyConnection_shouldReturnNullWhenObjectNull() {
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
 
-    // ---------------------------
-    // ACTIVE CONFIG VALIDATION
-    // ---------------------------
+    // =========================================================
+    // ACTIVE CONFIG
+    // =========================================================
 
     @Test
     public void shouldReturnNullWhenActiveConfigEmpty() throws Exception {
@@ -63,7 +92,31 @@ public class MemcachedUtilsTest {
         c.setStandByHost("");
         c.setStandByPort("");
 
-        setComponents(c);
+        setComponentsField(c);
+
+        assertNull(MemcachedUtils.memcachedConnection());
+    }
+
+    @Test
+    public void shouldReturnNullWhenActiveHostNull() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost(null);
+        c.setActivePort("11211");
+
+        setComponentsField(c);
+
+        assertNull(MemcachedUtils.memcachedConnection());
+    }
+
+    @Test
+    public void shouldReturnNullWhenActivePortNull() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("localhost");
+        c.setActivePort(null);
+
+        setComponentsField(c);
 
         assertNull(MemcachedUtils.memcachedConnection());
     }
@@ -77,14 +130,26 @@ public class MemcachedUtilsTest {
         c.setStandByHost("invalid");
         c.setStandByPort("9999");
 
-        setComponents(c);
+        setComponentsField(c);
 
         assertNull(MemcachedUtils.memcachedConnection());
     }
 
-    // ---------------------------
-    // STANDBY BRANCH COVERAGE
-    // ---------------------------
+    @Test
+    public void shouldHandleInvalidPortFormat() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("localhost");
+        c.setActivePort("ABC");
+
+        setComponentsField(c);
+
+        assertNull(MemcachedUtils.memcachedConnection());
+    }
+
+    // =========================================================
+    // STANDBY CONFIG
+    // =========================================================
 
     @Test
     public void shouldReturnNullWhenStandbyHostMissing() throws Exception {
@@ -93,7 +158,7 @@ public class MemcachedUtilsTest {
         c.setStandByHost(null);
         c.setStandByPort("11211");
 
-        setComponents(c);
+        setComponentsField(c);
 
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
@@ -105,7 +170,7 @@ public class MemcachedUtilsTest {
         c.setStandByHost("localhost");
         c.setStandByPort("");
 
-        setComponents(c);
+        setComponentsField(c);
 
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
@@ -117,14 +182,26 @@ public class MemcachedUtilsTest {
         c.setStandByHost("invalid");
         c.setStandByPort("9999");
 
-        setComponents(c);
+        setComponentsField(c);
 
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
 
-    // ---------------------------
-    // SAFE EXECUTION PATHS
-    // ---------------------------
+    @Test
+    public void shouldReturnNullWhenStandbyPortNotNumeric() throws Exception {
+
+        Components c = new Components();
+        c.setStandByHost("localhost");
+        c.setStandByPort("ABC");
+
+        setComponentsField(c);
+
+        assertNull(MemcachedUtils.standByMemcachedConn());
+    }
+
+    // =========================================================
+    // SET / GET
+    // =========================================================
 
     @Test
     public void shouldHandleSetDataSafelyWithInvalidConnection() throws Exception {
@@ -135,7 +212,7 @@ public class MemcachedUtilsTest {
         c.setStandByHost("invalid");
         c.setStandByPort("9999");
 
-        setComponents(c);
+        setComponentsField(c);
 
         String result = MemcachedUtils.memcachedSetData(new User(), "key");
 
@@ -152,16 +229,42 @@ public class MemcachedUtilsTest {
         c.setStandByHost("invalid");
         c.setStandByPort("9999");
 
-        setComponents(c);
+        setComponentsField(c);
 
         User result = MemcachedUtils.memcachedGetData("key");
 
         assertNull(result);
     }
 
-    // ---------------------------
-    // EDGE FALLBACK COVERAGE
-    // ---------------------------
+    @Test
+    public void shouldHandleNullKeyInGet() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("invalid");
+        c.setActivePort("9999");
+
+        setComponentsField(c);
+
+        assertNull(MemcachedUtils.memcachedGetData(null));
+    }
+
+    @Test
+    public void shouldHandleNullKeyInSet() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("invalid");
+        c.setActivePort("9999");
+
+        setComponentsField(c);
+
+        String result = MemcachedUtils.memcachedSetData(new User(), null);
+
+        assertNotNull(result);
+    }
+
+    // =========================================================
+    // FALLBACK
+    // =========================================================
 
     @Test
     public void shouldFallbackToStandbyLogicWithoutThrowing() throws Exception {
@@ -172,7 +275,7 @@ public class MemcachedUtilsTest {
         c.setStandByHost("localhost");
         c.setStandByPort("11211");
 
-        setComponents(c);
+        setComponentsField(c);
 
         try {
             MemcachedUtils.memcachedConnection();
@@ -181,4 +284,17 @@ public class MemcachedUtilsTest {
         }
     }
 
+    @Test
+    public void shouldHandleEmptyStandbyConfiguration() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("invalid");
+        c.setActivePort("9999");
+        c.setStandByHost("");
+        c.setStandByPort("");
+
+        setComponentsField(c);
+
+        assertNull(MemcachedUtils.memcachedConnection());
+    }
 }
