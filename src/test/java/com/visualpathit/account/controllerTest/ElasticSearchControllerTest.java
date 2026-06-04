@@ -9,13 +9,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.ui.Model;
 import org.opensearch.client.RestHighLevelClient;
+import org.springframework.ui.Model;
 
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
 
 public class ElasticSearchControllerTest {
 
@@ -35,7 +35,7 @@ public class ElasticSearchControllerTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         controller = new ElasticSearchController(
                 userService,
@@ -67,21 +67,47 @@ public class ElasticSearchControllerTest {
     }
 
     // =========================
-    // VIEW USER FOUND
+    // SYNC FAILURE (exception path)
     // =========================
     @Test
-    public void shouldReturnUserFound() throws Exception {
+    public void shouldHandleSyncFailure() {
+
+        when(userService.getList()).thenThrow(new RuntimeException("DB error"));
+
+        String view = controller.insert(model);
+
+        assertEquals("elasticeSearchRes", view);
+    }
+
+    // =========================
+    // VIEW USER SUCCESS PATH
+    // =========================
+    @Test
+    public void shouldHandleViewUser() throws Exception {
 
         RestHighLevelClient client = mock(RestHighLevelClient.class);
 
         when(clientFactory.createClient()).thenReturn(client);
 
-        // לא ניכנס ל-OpenSearch response mocking מורכב
         String view = controller.view("1", model);
 
         assertEquals("elasticeSearchRes", view);
 
         verify(clientFactory).createClient();
+    }
+
+    // =========================
+    // VIEW FAILURE PATH
+    // =========================
+    @Test
+    public void shouldHandleViewError() throws Exception {
+
+        when(clientFactory.createClient())
+                .thenThrow(new RuntimeException("connection error"));
+
+        String view = controller.view("1", model);
+
+        assertEquals("elasticeSearchRes", view);
     }
 
     // =========================
@@ -116,5 +142,21 @@ public class ElasticSearchControllerTest {
         assertEquals("elasticeSearchRes", view);
 
         verify(clientFactory).createClient();
+    }
+
+    // =========================
+    // EMPTY USER LIST (edge case)
+    // =========================
+    @Test
+    public void shouldHandleEmptyUserList() throws Exception {
+
+        when(userService.getList()).thenReturn(List.of());
+
+        RestHighLevelClient client = mock(RestHighLevelClient.class);
+        when(clientFactory.createClient()).thenReturn(client);
+
+        String view = controller.insert(model);
+
+        assertEquals("elasticeSearchRes", view);
     }
 }
