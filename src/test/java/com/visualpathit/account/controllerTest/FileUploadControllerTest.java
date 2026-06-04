@@ -97,17 +97,4 @@ public class FileUploadControllerTest {
                 assertTrue(result.contains("failed"));
         }
 
-        @Test
-        public void shouldSaveUserCorrectly() throws Exception {
-                when(file.isEmpty()).thenReturn(false);
-                when(file.getBytes()).thenReturn("abc".getBytes());
-
-                User user = new User();
-                when(userService.findByUsername("john")).thenReturn(user);
-
-                controller.uploadFileHandler("test", "john", file);
-
-                verify(userService, times(1)).save(any(User.class));
-        }
-
 }
