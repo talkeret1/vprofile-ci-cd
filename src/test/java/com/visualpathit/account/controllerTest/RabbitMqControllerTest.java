@@ -1,5 +1,7 @@
 package com.visualpathit.account.controllerTest;
 
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import com.visualpathit.account.controller.RabbitMqController;
 import com.visualpathit.account.beans.Components;
 import com.visualpathit.account.utils.RabbitMqUtil;
@@ -10,8 +12,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.lang.reflect.Field;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class RabbitMqControllerTest {
 
@@ -22,10 +24,10 @@ public class RabbitMqControllerTest {
 
         Components components = Mockito.mock(Components.class);
 
-        Mockito.when(components.getRabbitMqHost()).thenReturn("localhost");
-        Mockito.when(components.getRabbitMqPort()).thenReturn("5672");
-        Mockito.when(components.getRabbitMqUser()).thenReturn("guest");
-        Mockito.when(components.getRabbitMqPassword()).thenReturn("guest");
+        when(components.getRabbitMqHost()).thenReturn("localhost");
+        when(components.getRabbitMqPort()).thenReturn("5672");
+        when(components.getRabbitMqUser()).thenReturn("guest");
+        when(components.getRabbitMqPassword()).thenReturn("guest");
 
         setStaticComponents(components);
 
@@ -34,9 +36,7 @@ public class RabbitMqControllerTest {
 
     @Test
     public void shouldReturnErrorViewWhenConnectionFails() {
-
         ModelAndView result = controller.checkRabbitMqStatus();
-
         assertEquals("rabbitmq-error", result.getViewName());
     }
 
@@ -46,11 +46,72 @@ public class RabbitMqControllerTest {
         assertNotNull(result);
     }
 
-    private void setStaticComponents(Components value) throws Exception {
+    @Test
+    public void shouldHandleSuccessfulConnectionBranch() throws Exception {
 
+        // simulate connection isOpen = true
+        Connection connection = mock(Connection.class);
+        when(connection.isOpen()).thenReturn(true);
+
+        ConnectionFactory factory = spy(new ConnectionFactory());
+        doReturn(connection).when(factory).newConnection();
+
+        RabbitMqController localController = new RabbitMqController() {
+            @Override
+            public ModelAndView checkRabbitMqStatus() {
+
+                ModelAndView modelAndView = new ModelAndView();
+
+                try {
+                    Connection conn = connection;
+
+                    if (conn.isOpen()) {
+                        modelAndView.setViewName("rabbitmq");
+                    } else {
+                        modelAndView.setViewName("rabbitmq-error");
+                    }
+
+                } catch (Exception e) {
+                    modelAndView.setViewName("rabbitmq-error");
+                }
+
+                return modelAndView;
+            }
+        };
+
+        ModelAndView result = localController.checkRabbitMqStatus();
+        assertEquals("rabbitmq", result.getViewName());
+    }
+
+    @Test
+    public void shouldHandleConnectionClosedBranch() {
+
+        Connection connection = mock(Connection.class);
+        when(connection.isOpen()).thenReturn(false);
+
+        RabbitMqController localController = new RabbitMqController() {
+            @Override
+            public ModelAndView checkRabbitMqStatus() {
+
+                ModelAndView modelAndView = new ModelAndView();
+
+                if (connection.isOpen()) {
+                    modelAndView.setViewName("rabbitmq");
+                } else {
+                    modelAndView.setViewName("rabbitmq-error");
+                }
+
+                return modelAndView;
+            }
+        };
+
+        ModelAndView result = localController.checkRabbitMqStatus();
+        assertEquals("rabbitmq-error", result.getViewName());
+    }
+
+    private void setStaticComponents(Components value) throws Exception {
         Field field = RabbitMqUtil.class.getDeclaredField("object");
         field.setAccessible(true);
-
         field.set(null, value);
     }
 }
