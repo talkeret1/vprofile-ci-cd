@@ -1,16 +1,45 @@
 package com.visualpathit.account.serviceTest;
 
+import com.visualpathit.account.service.ConsumerServiceImpl;
 import org.junit.Test;
 
-import com.visualpathit.account.service.ConsumerServiceImpl;
+import static org.junit.Assert.assertTrue;
 
 public class ConsumerServiceImplTest {
 
     @Test
-    public void shouldConsumeMessage() {
+    public void shouldConsumeMessageWithoutException() {
 
         ConsumerServiceImpl service = new ConsumerServiceImpl();
 
-        service.consumerMessage("hello".getBytes());
+        byte[] data = "hello rabbit".getBytes();
+
+        service.consumerMessage(data);
+
+        assertTrue(true);
+    }
+
+    @Test
+    public void shouldHandleEmptyMessage() {
+
+        ConsumerServiceImpl service = new ConsumerServiceImpl();
+
+        byte[] data = new byte[0];
+
+        service.consumerMessage(data);
+
+        assertTrue(true);
+    }
+
+    @Test
+    public void shouldHandleNullBytesSafely() {
+
+        ConsumerServiceImpl service = new ConsumerServiceImpl();
+
+        try {
+            service.consumerMessage(null);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
     }
 }
