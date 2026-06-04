@@ -1,22 +1,25 @@
 package com.visualpathit.account.controllerTest;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Arrays;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-
 import com.visualpathit.account.controller.UserController;
 import com.visualpathit.account.model.User;
 import com.visualpathit.account.service.*;
+import com.visualpathit.account.utils.MemcachedUtils;
+import com.visualpathit.account.validator.UserValidator;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.*;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
 public class UserControllerTest {
 
 	@InjectMocks
@@ -29,7 +32,7 @@ public class UserControllerTest {
 	@Mock
 	private ProducerService producerService;
 	@Mock
-	private com.visualpathit.account.validator.UserValidator userValidator;
+	private UserValidator userValidator;
 	@Mock
 	private Model model;
 	@Mock
@@ -37,8 +40,12 @@ public class UserControllerTest {
 
 	@Before
 	public void setup() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 	}
+
+	// -------------------------
+	// REGISTRATION FLOW
+	// -------------------------
 
 	@Test
 	public void shouldShowRegistrationPage() {
@@ -79,6 +86,10 @@ public class UserControllerTest {
 		assertEquals("redirect:/welcome", view);
 	}
 
+	// -------------------------
+	// LOGIN FLOW
+	// -------------------------
+
 	@Test
 	public void shouldFailLogin() {
 
@@ -94,6 +105,24 @@ public class UserControllerTest {
 	}
 
 	@Test
+	public void shouldSuccessLogin() {
+
+		User user = new User();
+		user.setUsername("john");
+		user.setPassword("pass");
+
+		when(securityService.autologin(any(), any())).thenReturn(true);
+
+		String view = controller.loginPost(user, model);
+
+		assertEquals("redirect:/welcome", view);
+	}
+
+	// -------------------------
+	// USERS LIST
+	// -------------------------
+
+	@Test
 	public void shouldReturnUsersList() {
 
 		when(userService.getList()).thenReturn(Arrays.asList(new User(), new User()));
@@ -103,8 +132,112 @@ public class UserControllerTest {
 		assertEquals("userList", view);
 	}
 
+	// -------------------------
+	// CACHE HIT PATH
+	// -------------------------
+
+	@Test
+	public void shouldReturnUserFromCache() {
+
+		User cachedUser = new User();
+		cachedUser.setId(1L);
+
+		try (MockedStatic<MemcachedUtils> mocked = mockStatic(MemcachedUtils.class)) {
+
+			mocked.when(() -> MemcachedUtils.memcachedGetData("1"))
+					.thenReturn(cachedUser);
+
+			String view = controller.getOneUser("1", model);
+
+			assertEquals("user", view);
+			verify(model).addAttribute(eq("user"), any());
+		}
+	}
+
+	// -------------------------
+	// CACHE MISS + DB FALLBACK
+	// -------------------------
+
+	@Test
+	public void shouldReturnUserFromDbWhenCacheMiss() {
+
+		User dbUser = new User();
+		dbUser.setId(2L);
+
+		try (MockedStatic<MemcachedUtils> mocked = mockStatic(MemcachedUtils.class)) {
+
+			mocked.when(() -> MemcachedUtils.memcachedGetData("2"))
+					.thenReturn(null);
+
+			mocked.when(() -> MemcachedUtils.memcachedSetData(any(), eq("2")))
+					.thenReturn("Data is From DB and Data Inserted In Cache !!");
+
+			when(userService.findById(2L)).thenReturn(dbUser);
+
+			String view = controller.getOneUser("2", model);
+
+			assertEquals("user", view);
+			verify(model).addAttribute(eq("user"), eq(dbUser));
+		}
+	}
+
+	// -------------------------
+	// EXCEPTION PATH
+	// -------------------------
+
+	@Test
+	public void shouldHandleExceptionGracefully() {
+
+		try (MockedStatic<MemcachedUtils> mocked = mockStatic(MemcachedUtils.class)) {
+
+			mocked.when(() -> MemcachedUtils.memcachedGetData("bad"))
+					.thenThrow(new RuntimeException("fail"));
+
+			String view = controller.getOneUser("bad", model);
+
+			assertEquals("user", view);
+			verify(model).addAttribute(eq("Result"), any());
+		}
+	}
+
+	// -------------------------
+	// UPDATE FLOW
+	// -------------------------
+
+	@Test
+	public void shouldUpdateUserProfile() {
+
+		User existing = new User();
+		existing.setUsername("old");
+
+		User updated = new User();
+		updated.setUsername("new");
+
+		when(userService.findByUsername("old")).thenReturn(existing);
+
+		String view = controller.userUpdateProfile("old", updated);
+
+		assertEquals("welcome", view);
+		verify(userService).save(existing);
+	}
+
+	// -------------------------
+	// SIMPLE PAGES
+	// -------------------------
+
 	@Test
 	public void shouldReturnWelcome() {
 		assertEquals("welcome", controller.welcome(model));
+	}
+
+	@Test
+	public void shouldReturnIndex() {
+		assertEquals("index_home", controller.indexHome(model));
+	}
+
+	@Test
+	public void shouldReturnLoginPage() {
+		String view = controller.login(model, null, null);
+		assertEquals("login", view);
 	}
 }
