@@ -3,6 +3,7 @@ package com.visualpathit.account.controller;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,17 +27,11 @@ public class FileUploadController {
 
 	private static final Logger logger = LoggerFactory.getLogger(FileUploadController.class);
 
-	/**
-	 * Upload page
-	 */
 	@RequestMapping(value = { "/upload" }, method = RequestMethod.GET)
 	public final String upload(final Model model) {
 		return "upload";
 	}
 
-	/**
-	 * Handle file upload
-	 */
 	@RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
 	public @ResponseBody String uploadFileHandler(
 			@RequestParam("name") String name,
@@ -52,8 +47,11 @@ public class FileUploadController {
 		try {
 			byte[] bytes = file.getBytes();
 
-			// Create directory
 			String rootPath = System.getProperty("catalina.home");
+			if (rootPath == null || rootPath.isEmpty()) {
+				rootPath = System.getProperty("java.io.tmpdir");
+			}
+
 			File dir = new File(rootPath + File.separator + "tmpFiles");
 
 			if (!dir.exists()) {
@@ -64,11 +62,9 @@ public class FileUploadController {
 				}
 			}
 
-			// Create file
 			File serverFile = new File(dir.getAbsolutePath()
 					+ File.separator + name + ".png");
 
-			// Update user profile image
 			User user = userService.findByUsername(userName);
 			if (user == null) {
 				return "User not found: " + userName;
@@ -78,16 +74,18 @@ public class FileUploadController {
 			user.setProfileImgPath(serverFile.getAbsolutePath());
 			userService.save(user);
 
-			// Write file
 			try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(serverFile))) {
 
 				stream.write(bytes);
 			}
 
-			logger.info("File uploaded successfully to: {}",
-					serverFile.getAbsolutePath());
+			logger.info("File uploaded successfully to: {}", serverFile.getAbsolutePath());
 
 			return "You successfully uploaded file=" + name + ".png";
+
+		} catch (IOException e) {
+			logger.error("IO error during file upload for user: {}", userName, e);
+			return "You failed to upload " + name + ".png => IO error";
 
 		} catch (Exception e) {
 			logger.error("File upload failed for user: {}", userName, e);
