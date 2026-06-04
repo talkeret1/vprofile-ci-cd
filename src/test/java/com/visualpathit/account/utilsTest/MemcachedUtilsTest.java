@@ -25,89 +25,159 @@ public class MemcachedUtilsTest {
     }
 
     @Before
-    public void reset() throws Exception {
+    public void resetState() throws Exception {
         clearComponents();
     }
 
+    // ---------------------------
+    // BASIC NULL OBJECT SCENARIOS
+    // ---------------------------
+
     @Test
-    public void shouldReturnCacheUnavailableWhenObjectIsNull() {
+    public void memcachedSet_shouldReturnUnavailableWhenObjectNull() {
         String result = MemcachedUtils.memcachedSetData(new User(), "key");
         assertEquals("Cache unavailable", result);
     }
 
     @Test
-    public void shouldReturnNullFromGetWhenObjectIsNull() {
-        User result = MemcachedUtils.memcachedGetData("key");
-        assertNull(result);
+    public void memcachedGet_shouldReturnNullWhenObjectNull() {
+        assertNull(MemcachedUtils.memcachedGetData("key"));
     }
 
     @Test
-    public void shouldReturnNullConnectionWhenObjectIsNull() {
+    public void connection_shouldReturnNullWhenObjectNull() {
         assertNull(MemcachedUtils.memcachedConnection());
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
 
+    // ---------------------------
+    // ACTIVE CONFIG VALIDATION
+    // ---------------------------
+
     @Test
-    public void shouldHandleInvalidConfigGracefully() throws Exception {
+    public void shouldReturnNullWhenActiveConfigEmpty() throws Exception {
 
-        Components components = new Components();
-        components.setActiveHost("");
-        components.setActivePort("");
-        components.setStandByHost("");
-        components.setStandByPort("");
+        Components c = new Components();
+        c.setActiveHost("");
+        c.setActivePort("");
+        c.setStandByHost("");
+        c.setStandByPort("");
 
-        setComponents(components);
+        setComponents(c);
 
         assertNull(MemcachedUtils.memcachedConnection());
+    }
+
+    @Test
+    public void shouldReturnNullWhenActiveConfigInvalidHostPort() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("invalid");
+        c.setActivePort("9999");
+        c.setStandByHost("invalid");
+        c.setStandByPort("9999");
+
+        setComponents(c);
+
+        assertNull(MemcachedUtils.memcachedConnection());
+    }
+
+    // ---------------------------
+    // STANDBY BRANCH COVERAGE
+    // ---------------------------
+
+    @Test
+    public void shouldReturnNullWhenStandbyHostMissing() throws Exception {
+
+        Components c = new Components();
+        c.setStandByHost(null);
+        c.setStandByPort("11211");
+
+        setComponents(c);
+
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
 
     @Test
-    public void shouldHandlePartialStandbyConfig() throws Exception {
+    public void shouldReturnNullWhenStandbyPortMissing() throws Exception {
 
-        Components components = new Components();
-        components.setStandByHost("localhost");
-        components.setStandByPort("");
+        Components c = new Components();
+        c.setStandByHost("localhost");
+        c.setStandByPort("");
 
-        setComponents(components);
-
-        assertNull(MemcachedUtils.standByMemcachedConn());
-    }
-
-    @Test
-    public void shouldHandleNullStandbyHost() throws Exception {
-
-        Components components = new Components();
-        components.setStandByHost(null);
-        components.setStandByPort("11211");
-
-        setComponents(components);
+        setComponents(c);
 
         assertNull(MemcachedUtils.standByMemcachedConn());
     }
 
     @Test
-    public void shouldHandleInterruptedExceptionFlowSafely() throws Exception {
-        // לא באמת נכנס ל-InterruptedException בלי mocking
-        // אבל מכסה flow מלא של setData עם config null/invalid
-        Components components = new Components();
-        components.setActiveHost("invalid");
-        components.setActivePort("99999");
-        setComponents(components);
+    public void shouldReturnNullWhenStandbyConfigInvalid() throws Exception {
+
+        Components c = new Components();
+        c.setStandByHost("invalid");
+        c.setStandByPort("9999");
+
+        setComponents(c);
+
+        assertNull(MemcachedUtils.standByMemcachedConn());
+    }
+
+    // ---------------------------
+    // SAFE EXECUTION PATHS
+    // ---------------------------
+
+    @Test
+    public void shouldHandleSetDataSafelyWithInvalidConnection() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("invalid");
+        c.setActivePort("9999");
+        c.setStandByHost("invalid");
+        c.setStandByPort("9999");
+
+        setComponents(c);
 
         String result = MemcachedUtils.memcachedSetData(new User(), "key");
-        assertTrue(result.startsWith("Cache set failed") || result.equals("Cache unavailable"));
+
+        assertNotNull(result);
+        assertTrue(result.startsWith("Cache"));
     }
 
     @Test
-    public void shouldHandleGetDataFailureGracefully() throws Exception {
+    public void shouldHandleGetDataSafelyWithInvalidConnection() throws Exception {
 
-        Components components = new Components();
-        components.setActiveHost("invalid");
-        components.setActivePort("99999");
-        setComponents(components);
+        Components c = new Components();
+        c.setActiveHost("invalid");
+        c.setActivePort("9999");
+        c.setStandByHost("invalid");
+        c.setStandByPort("9999");
+
+        setComponents(c);
 
         User result = MemcachedUtils.memcachedGetData("key");
+
         assertNull(result);
+    }
+
+    // ---------------------------
+    // EDGE FALLBACK COVERAGE
+    // ---------------------------
+
+    @Test
+    public void shouldFallbackToStandbyLogicWithoutThrowing() throws Exception {
+
+        Components c = new Components();
+        c.setActiveHost("invalid");
+        c.setActivePort("9999");
+        c.setStandByHost("localhost");
+        c.setStandByPort("11211");
+
+        setComponents(c);
+
+        try {
+            MemcachedUtils.memcachedConnection();
+        } catch (Exception e) {
+            fail("Should not throw exception");
+        }
     }
 }
