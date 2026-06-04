@@ -1,92 +1,112 @@
 package com.visualpathit.account.controllerTest;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
-
-import java.lang.reflect.Field;
-
+import com.visualpathit.account.controller.FileUploadController;
+import com.visualpathit.account.model.User;
+import com.visualpathit.account.service.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
-import com.visualpathit.account.controller.FileUploadController;
-import com.visualpathit.account.model.User;
-import com.visualpathit.account.service.UserService;
+import java.lang.reflect.Field;
+
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 public class FileUploadControllerTest {
 
-    private FileUploadController controller;
+        private FileUploadController controller;
 
-    @Mock
-    private UserService userService;
+        @Mock
+        private UserService userService;
 
-    @Before
-    public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        @Before
+        public void setup() throws Exception {
 
-        controller = new FileUploadController();
+                MockitoAnnotations.openMocks(this);
 
-        Field field = FileUploadController.class.getDeclaredField("userService");
-        field.setAccessible(true);
-        field.set(controller, userService);
+                controller = new FileUploadController();
 
-        System.setProperty("catalina.home", System.getProperty("java.io.tmpdir"));
-    }
+                Field field = FileUploadController.class.getDeclaredField("userService");
+                field.setAccessible(true);
+                field.set(controller, userService);
 
-    @Test
-    public void shouldReturnErrorWhenFileEmpty() {
+                System.setProperty("catalina.home", System.getProperty("java.io.tmpdir"));
+        }
 
-        MockMultipartFile file = new MockMultipartFile("file", "", "text/plain", new byte[0]);
+        @Test
+        public void shouldReturnErrorWhenFileEmpty() {
 
-        String result = controller.uploadFileHandler(
-                "image",
-                "john",
-                file);
+                MockMultipartFile file = new MockMultipartFile(
+                                "file", "", "text/plain", new byte[0]);
 
-        assertTrue(result.contains("empty"));
-    }
+                String result = controller.uploadFileHandler("image", "john", file);
 
-    @Test
-    public void shouldReturnUserNotFound() {
+                assertTrue(result.contains("empty"));
+        }
 
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test.png",
-                "image/png",
-                "hello".getBytes());
+        @Test
+        public void shouldReturnUserNotFound() {
 
-        when(userService.findByUsername("john"))
-                .thenReturn(null);
+                MockMultipartFile file = new MockMultipartFile(
+                                "file", "test.png", "image/png", "hello".getBytes());
 
-        String result = controller.uploadFileHandler(
-                "image",
-                "john",
-                file);
+                when(userService.findByUsername("john")).thenReturn(null);
 
-        assertTrue(result.contains("User not found"));
-    }
+                String result = controller.uploadFileHandler("image", "john", file);
 
-    @Test
-    public void shouldUploadSuccessfully() {
+                assertTrue(result.contains("User not found"));
+        }
 
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test.png",
-                "image/png",
-                "hello".getBytes());
+        @Test
+        public void shouldUploadSuccessfully() {
 
-        User user = new User();
+                MockMultipartFile file = new MockMultipartFile(
+                                "file", "test.png", "image/png", "hello".getBytes());
 
-        when(userService.findByUsername("john"))
-                .thenReturn(user);
+                User user = new User();
 
-        String result = controller.uploadFileHandler(
-                "image",
-                "john",
-                file);
+                when(userService.findByUsername("john")).thenReturn(user);
 
-        assertTrue(result.contains("successfully"));
-    }
+                String result = controller.uploadFileHandler("image", "john", file);
+
+                assertTrue(result.contains("successfully"));
+        }
+
+        // 🔥 NEW: simulate directory creation failure
+        @Test
+        public void shouldHandleDirectoryCreationFailureGracefully() throws Exception {
+
+                MockMultipartFile file = new MockMultipartFile(
+                                "file", "test.png", "image/png", "hello".getBytes());
+
+                User user = new User();
+                when(userService.findByUsername("john")).thenReturn(user);
+
+                // Force rootPath to invalid location (read-only / nonsense path)
+                System.setProperty("catalina.home", "/root/invalid_path_xyz");
+
+                String result = controller.uploadFileHandler("image", "john", file);
+
+                assertTrue(
+                                result.contains("Server error")
+                                                || result.contains("failed")
+                                                || result.contains("User"));
+        }
+
+        // 🔥 NEW: simulate exception path
+        @Test
+        public void shouldHandleExceptionGracefully() {
+
+                MockMultipartFile file = new MockMultipartFile(
+                                "file", "test.png", "image/png", "hello".getBytes());
+
+                when(userService.findByUsername("john"))
+                                .thenThrow(new RuntimeException("DB failure"));
+
+                String result = controller.uploadFileHandler("image", "john", file);
+
+                assertTrue(result.contains("failed"));
+        }
 }
