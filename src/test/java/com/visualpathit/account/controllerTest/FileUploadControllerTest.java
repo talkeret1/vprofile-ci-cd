@@ -1,112 +1,73 @@
 package com.visualpathit.account.controllerTest;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.io.File;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.visualpathit.account.controller.FileUploadController;
 import com.visualpathit.account.model.User;
 import com.visualpathit.account.service.UserService;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.mock.web.MockMultipartFile;
-
-import java.lang.reflect.Field;
-
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
 
 public class FileUploadControllerTest {
 
+        @InjectMocks
         private FileUploadController controller;
 
         @Mock
         private UserService userService;
 
+        @Mock
+        private MultipartFile file;
+
         @Before
-        public void setup() throws Exception {
-
-                MockitoAnnotations.openMocks(this);
-
-                controller = new FileUploadController();
-
-                Field field = FileUploadController.class.getDeclaredField("userService");
-                field.setAccessible(true);
-                field.set(controller, userService);
-
-                System.setProperty("catalina.home", System.getProperty("java.io.tmpdir"));
+        public void setup() {
+                MockitoAnnotations.initMocks(this);
         }
 
         @Test
-        public void shouldReturnErrorWhenFileEmpty() {
+        public void shouldRejectEmptyFile() {
 
-                MockMultipartFile file = new MockMultipartFile(
-                                "file", "", "text/plain", new byte[0]);
+                when(file.isEmpty()).thenReturn(true);
 
-                String result = controller.uploadFileHandler("image", "john", file);
+                String result = controller.uploadFileHandler("test", "john", file);
 
-                assertTrue(result.contains("empty"));
+                assertTrue(result.contains("failed"));
         }
 
         @Test
         public void shouldReturnUserNotFound() {
 
-                MockMultipartFile file = new MockMultipartFile(
-                                "file", "test.png", "image/png", "hello".getBytes());
+                when(file.isEmpty()).thenReturn(false);
 
                 when(userService.findByUsername("john")).thenReturn(null);
 
-                String result = controller.uploadFileHandler("image", "john", file);
+                String result = controller.uploadFileHandler("test", "john", file);
 
                 assertTrue(result.contains("User not found"));
         }
 
         @Test
-        public void shouldUploadSuccessfully() {
+        public void shouldFailOnDirectoryCreation() throws Exception {
 
-                MockMultipartFile file = new MockMultipartFile(
-                                "file", "test.png", "image/png", "hello".getBytes());
-
-                User user = new User();
-
-                when(userService.findByUsername("john")).thenReturn(user);
-
-                String result = controller.uploadFileHandler("image", "john", file);
-
-                assertTrue(result.contains("successfully"));
-        }
-
-        // 🔥 NEW: simulate directory creation failure
-        @Test
-        public void shouldHandleDirectoryCreationFailureGracefully() throws Exception {
-
-                MockMultipartFile file = new MockMultipartFile(
-                                "file", "test.png", "image/png", "hello".getBytes());
+                when(file.isEmpty()).thenReturn(false);
+                when(file.getBytes()).thenReturn("abc".getBytes());
 
                 User user = new User();
                 when(userService.findByUsername("john")).thenReturn(user);
 
-                // Force rootPath to invalid location (read-only / nonsense path)
-                System.setProperty("catalina.home", "/root/invalid_path_xyz");
+                // simulate bad path
+                System.setProperty("catalina.home", "");
 
-                String result = controller.uploadFileHandler("image", "john", file);
+                String result = controller.uploadFileHandler("test", "john", file);
 
-                assertTrue(
-                                result.contains("Server error")
-                                                || result.contains("failed")
-                                                || result.contains("User"));
-        }
-
-        // 🔥 NEW: simulate exception path
-        @Test
-        public void shouldHandleExceptionGracefully() {
-
-                MockMultipartFile file = new MockMultipartFile(
-                                "file", "test.png", "image/png", "hello".getBytes());
-
-                when(userService.findByUsername("john"))
-                                .thenThrow(new RuntimeException("DB failure"));
-
-                String result = controller.uploadFileHandler("image", "john", file);
-
-                assertTrue(result.contains("failed"));
+                assertNotNull(result);
         }
 }

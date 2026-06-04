@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SecurityServiceImpl implements SecurityService {
+
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -33,10 +34,10 @@ public class SecurityServiceImpl implements SecurityService {
             return null;
         }
 
-        Object userDetails = ((org.springframework.security.core.Authentication) auth).getDetails();
+        Object principal = ((org.springframework.security.core.Authentication) auth).getPrincipal();
 
-        if (userDetails instanceof UserDetails) {
-            return ((UserDetails) userDetails).getUsername();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
         }
 
         return null;
@@ -44,17 +45,30 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public boolean autologin(final String username, final String password) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                userDetails, password, userDetails.getAuthorities());
 
-        authenticationManager.authenticate(usernamePasswordAuthenticationToken);
+        try {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        if (usernamePasswordAuthenticationToken.isAuthenticated()) {
-            SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-            logger.debug(String.format("Auto login %s successfully!", username));
-            return true;
+            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    password,
+                    userDetails.getAuthorities());
+
+            AuthenticationManager manager = this.authenticationManager;
+
+            var authResult = manager.authenticate(token);
+
+            if (authResult != null && authResult.isAuthenticated()) {
+                SecurityContextHolder.getContext().setAuthentication(authResult);
+                logger.debug(String.format("Auto login %s successfully!", username));
+                return true;
+            }
+
+        } catch (Exception e) {
+            logger.debug(String.format("Auto login %s failed!", username));
+            return false;
         }
+
         logger.debug(String.format("Auto login %s failed!", username));
         return false;
     }

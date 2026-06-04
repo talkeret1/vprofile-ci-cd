@@ -76,6 +76,7 @@ public class ProducerServiceImplTest {
     public void shouldHandleNullConnectionGracefully() throws Exception {
 
         ConnectionFactory factory = mock(ConnectionFactory.class);
+
         when(factory.newConnection()).thenReturn(null);
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);

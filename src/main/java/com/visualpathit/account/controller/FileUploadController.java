@@ -56,9 +56,12 @@ public class FileUploadController {
 			String rootPath = System.getProperty("catalina.home");
 			File dir = new File(rootPath + File.separator + "tmpFiles");
 
-			if (!dir.exists() && !dir.mkdirs()) {
-				logger.error("Failed to create directory: {}", dir.getAbsolutePath());
-				return "Server error: cannot create upload directory.";
+			if (!dir.exists()) {
+				boolean created = dir.mkdirs();
+				if (!created) {
+					logger.error("Failed to create directory: {}", dir.getAbsolutePath());
+					return "Server error: cannot create upload directory.";
+				}
 			}
 
 			// Create file
@@ -75,7 +78,7 @@ public class FileUploadController {
 			user.setProfileImgPath(serverFile.getAbsolutePath());
 			userService.save(user);
 
-			// ✅ FIX: try-with-resources (Sonar fix)
+			// Write file
 			try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(serverFile))) {
 
 				stream.write(bytes);

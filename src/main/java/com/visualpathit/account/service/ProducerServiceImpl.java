@@ -37,32 +37,53 @@ public class ProducerServiceImpl implements ProducerService {
 
     @Override
     public String produceMessage(String message) {
+
         Connection connection = null;
         Channel channel = null;
 
         try {
             connection = connectionFactory.newConnection();
+
+            if (connection == null) {
+                System.out.println("Connection is null");
+                return "response";
+            }
+
             channel = connection.createChannel();
+
+            if (channel == null) {
+                System.out.println("Channel is null");
+                return "response";
+            }
 
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
 
-            channel.basicPublish(
-                    EXCHANGE_NAME,
-                    "",
-                    null,
-                    message == null ? new byte[0] : message.getBytes());
+            byte[] msgBytes = (message == null) ? "".getBytes() : message.getBytes();
+
+            channel.basicPublish(EXCHANGE_NAME, "", null, msgBytes);
 
             System.out.println(" [x] Sent '" + message + "'");
 
         } catch (IOException | TimeoutException e) {
-            System.out.println("IOException");
+            System.out.println("RabbitMQ error");
             e.printStackTrace();
+
+        } catch (Exception e) {
+            System.out.println("Unexpected error");
+            e.printStackTrace();
+
         } finally {
             try {
-                if (channel != null)
+                if (channel != null) {
                     channel.close();
-                if (connection != null)
+                }
+            } catch (Exception ignored) {
+            }
+
+            try {
+                if (connection != null) {
                     connection.close();
+                }
             } catch (Exception ignored) {
             }
         }

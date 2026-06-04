@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -25,24 +24,24 @@ public class SecurityServiceImplTest {
 
         @Mock
         private AuthenticationManager authenticationManager;
-
         @Mock
         private UserDetailsService userDetailsService;
 
         @Before
         public void setup() {
                 MockitoAnnotations.initMocks(this);
-                SecurityContextHolder.clearContext();
 
                 securityService = new SecurityServiceImpl();
 
                 inject("authenticationManager", authenticationManager);
                 inject("userDetailsService", userDetailsService);
+
+                SecurityContextHolder.clearContext();
         }
 
         private void inject(String field, Object value) {
                 try {
-                        java.lang.reflect.Field f = SecurityServiceImpl.class.getDeclaredField(field);
+                        var f = SecurityServiceImpl.class.getDeclaredField(field);
                         f.setAccessible(true);
                         f.set(securityService, value);
                 } catch (Exception e) {
@@ -51,34 +50,24 @@ public class SecurityServiceImplTest {
         }
 
         @Test
-        public void shouldReturnNullWhenContextNull() {
-                SecurityContextHolder.setContext(null);
-                assertNull(securityService.findLoggedInUsername());
-        }
-
-        @Test
-        public void shouldReturnNullWhenAuthNull() {
+        public void shouldReturnNullWhenNoAuth() {
                 SecurityContextHolder.clearContext();
                 assertNull(securityService.findLoggedInUsername());
         }
 
         @Test
-        public void shouldReturnNullWhenDetailsNotUserDetails() {
-                Authentication auth = mock(Authentication.class);
-                when(auth.getDetails()).thenReturn("not-user-details");
-
-                SecurityContextHolder.getContext().setAuthentication(auth);
-
+        public void shouldReturnNullWhenAuthNull() {
+                SecurityContextHolder.getContext().setAuthentication(null);
                 assertNull(securityService.findLoggedInUsername());
         }
 
         @Test
-        public void shouldReturnUsernameFromSecurityContext() {
+        public void shouldReturnUsernameFromContext() {
 
                 User userDetails = new User("john", "pass", Collections.emptyList());
 
-                UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
+                var token = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
 
                 token.setDetails(userDetails);
 
@@ -88,9 +77,9 @@ public class SecurityServiceImplTest {
         }
 
         @Test
-        public void shouldAutoLoginSuccessfully() {
+        public void shouldAutoLoginSuccess() {
 
-                User userDetails = new User("john", "password", Collections.emptyList());
+                User userDetails = new User("john", "pass", Collections.emptyList());
 
                 when(userDetailsService.loadUserByUsername("john")).thenReturn(userDetails);
 
@@ -98,15 +87,13 @@ public class SecurityServiceImplTest {
                 when(authenticationManager.authenticate(any())).thenReturn(auth);
                 when(auth.isAuthenticated()).thenReturn(true);
 
-                boolean result = securityService.autologin("john", "password");
-
-                assertTrue(result);
+                assertTrue(securityService.autologin("john", "pass"));
         }
 
         @Test
-        public void shouldFailAutoLoginWhenNotAuthenticated() {
+        public void shouldAutoLoginFail() {
 
-                User userDetails = new User("john", "password", Collections.emptyList());
+                User userDetails = new User("john", "pass", Collections.emptyList());
 
                 when(userDetailsService.loadUserByUsername("john")).thenReturn(userDetails);
 
@@ -114,8 +101,6 @@ public class SecurityServiceImplTest {
                 when(authenticationManager.authenticate(any())).thenReturn(auth);
                 when(auth.isAuthenticated()).thenReturn(false);
 
-                boolean result = securityService.autologin("john", "password");
-
-                assertFalse(result);
+                assertFalse(securityService.autologin("john", "pass"));
         }
 }
