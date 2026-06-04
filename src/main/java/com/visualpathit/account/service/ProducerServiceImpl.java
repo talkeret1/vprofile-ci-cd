@@ -4,6 +4,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.visualpathit.account.utils.RabbitMqUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -11,6 +13,8 @@ import java.util.concurrent.TimeoutException;
 
 @Service
 public class ProducerServiceImpl implements ProducerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProducerServiceImpl.class);
 
     private static final String EXCHANGE_NAME = "messages";
 
@@ -45,14 +49,14 @@ public class ProducerServiceImpl implements ProducerService {
             connection = connectionFactory.newConnection();
 
             if (connection == null) {
-                System.out.println("Connection is null");
+                logger.warn("RabbitMQ connection is null");
                 return "response";
             }
 
             channel = connection.createChannel();
 
             if (channel == null) {
-                System.out.println("Channel is null");
+                logger.warn("RabbitMQ channel is null");
                 return "response";
             }
 
@@ -62,15 +66,13 @@ public class ProducerServiceImpl implements ProducerService {
 
             channel.basicPublish(EXCHANGE_NAME, "", null, msgBytes);
 
-            System.out.println(" [x] Sent '" + message + "'");
+            logger.info("RabbitMQ message sent: {}", message);
 
         } catch (IOException | TimeoutException e) {
-            System.out.println("RabbitMQ error");
-            e.printStackTrace();
+            logger.error("RabbitMQ error while sending message", e);
 
         } catch (Exception e) {
-            System.out.println("Unexpected error");
-            e.printStackTrace();
+            logger.error("Unexpected RabbitMQ error", e);
 
         } finally {
             try {
