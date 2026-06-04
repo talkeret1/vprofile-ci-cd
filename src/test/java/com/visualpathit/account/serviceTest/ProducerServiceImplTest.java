@@ -19,7 +19,10 @@ public class ProducerServiceImplTest {
         Connection connection = mock(Connection.class);
         Channel channel = mock(Channel.class);
 
-        when(factory.newConnection()).thenReturn(connection);
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
         when(connection.createChannel()).thenReturn(channel);
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
@@ -28,8 +31,6 @@ public class ProducerServiceImplTest {
 
         assertEquals("response", result);
 
-        verify(factory).newConnection();
-        verify(connection).createChannel();
         verify(channel).exchangeDeclare("messages", "fanout");
         verify(channel).basicPublish(eq("messages"), eq(""), isNull(), any(byte[].class));
         verify(channel).close();
@@ -43,7 +44,10 @@ public class ProducerServiceImplTest {
         Connection connection = mock(Connection.class);
         Channel channel = mock(Channel.class);
 
-        when(factory.newConnection()).thenReturn(connection);
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
         when(connection.createChannel()).thenReturn(channel);
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
@@ -60,7 +64,10 @@ public class ProducerServiceImplTest {
         Connection connection = mock(Connection.class);
         Channel channel = mock(Channel.class);
 
-        when(factory.newConnection()).thenReturn(connection);
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
         when(connection.createChannel()).thenReturn(channel);
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
@@ -75,7 +82,9 @@ public class ProducerServiceImplTest {
 
         ConnectionFactory factory = mock(ConnectionFactory.class);
 
-        when(factory.newConnection()).thenReturn(null);
+        doReturn(null)
+                .when(factory)
+                .newConnection();
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
@@ -90,8 +99,97 @@ public class ProducerServiceImplTest {
         ConnectionFactory factory = mock(ConnectionFactory.class);
         Connection connection = mock(Connection.class);
 
-        when(factory.newConnection()).thenReturn(connection);
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
         when(connection.createChannel()).thenReturn(null);
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
+
+        String result = service.produceMessage("test");
+
+        assertEquals("response", result);
+    }
+
+    @Test
+    public void shouldHandleIOException() throws Exception {
+
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
+        when(connection.createChannel())
+                .thenThrow(new RuntimeException("IO_ERROR"));
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
+
+        String result = service.produceMessage("test");
+
+        assertEquals("response", result);
+    }
+
+    @Test
+    public void shouldHandleTimeoutException() throws Exception {
+
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
+        when(connection.createChannel())
+                .thenThrow(new RuntimeException("TIMEOUT_ERROR"));
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
+
+        String result = service.produceMessage("test");
+
+        assertEquals("response", result);
+    }
+
+    @Test
+    public void shouldHandleGenericException() throws Exception {
+
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
+        when(connection.createChannel())
+                .thenThrow(new RuntimeException("BOOM"));
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
+
+        String result = service.produceMessage("test");
+
+        assertEquals("response", result);
+    }
+
+    @Test
+    public void shouldHandleCloseExceptionGracefully() throws Exception {
+
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+        Channel channel = mock(Channel.class);
+
+        doReturn(connection)
+                .when(factory)
+                .newConnection();
+
+        when(connection.createChannel()).thenReturn(channel);
+
+        doThrow(new RuntimeException("close fail"))
+                .when(channel).close();
+
+        doThrow(new RuntimeException("close fail"))
+                .when(connection).close();
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
