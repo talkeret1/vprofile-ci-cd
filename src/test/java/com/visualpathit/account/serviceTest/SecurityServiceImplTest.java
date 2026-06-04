@@ -77,6 +77,17 @@ public class SecurityServiceImplTest {
         }
 
         @Test
+        public void shouldReturnNullWhenPrincipalNotUserDetails() {
+
+                Authentication auth = mock(Authentication.class);
+                when(auth.getPrincipal()).thenReturn("not-user");
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                assertNull(securityService.findLoggedInUsername());
+        }
+
+        @Test
         public void shouldAutoLoginSuccess() {
 
                 User userDetails = new User("john", "pass", Collections.emptyList());
@@ -100,6 +111,15 @@ public class SecurityServiceImplTest {
                 Authentication auth = mock(Authentication.class);
                 when(authenticationManager.authenticate(any())).thenReturn(auth);
                 when(auth.isAuthenticated()).thenReturn(false);
+
+                assertFalse(securityService.autologin("john", "pass"));
+        }
+
+        @Test
+        public void shouldAutoLoginFailWhenExceptionThrown() {
+
+                when(userDetailsService.loadUserByUsername("john"))
+                                .thenThrow(new RuntimeException("fail"));
 
                 assertFalse(securityService.autologin("john", "pass"));
         }

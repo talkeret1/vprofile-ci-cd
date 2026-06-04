@@ -11,6 +11,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.lang.reflect.Field;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class RabbitMqControllerTest {
 
@@ -39,15 +40,17 @@ public class RabbitMqControllerTest {
         assertEquals("rabbitmq-error", result.getViewName());
     }
 
-    // =========================
-    // FIXED STATIC INJECTION
-    // =========================
+    @Test
+    public void shouldReturnModelAndViewNotNull() {
+        ModelAndView result = controller.checkRabbitMqStatus();
+        assertNotNull(result);
+    }
+
     private void setStaticComponents(Components value) throws Exception {
 
         Field field = RabbitMqUtil.class.getDeclaredField("object");
         field.setAccessible(true);
 
-        // חשוב: static field → לכן null
         field.set(null, value);
     }
 }

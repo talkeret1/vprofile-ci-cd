@@ -7,9 +7,7 @@ import com.visualpathit.account.service.ProducerServiceImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class ProducerServiceImplTest {
@@ -50,9 +48,9 @@ public class ProducerServiceImplTest {
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
-        String result = service.produceMessage("");
+        service.produceMessage("");
 
-        assertEquals("response", result);
+        verify(channel).basicPublish(eq("messages"), eq(""), isNull(), any(byte[].class));
     }
 
     @Test
@@ -67,9 +65,9 @@ public class ProducerServiceImplTest {
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
-        String result = service.produceMessage(null);
+        service.produceMessage(null);
 
-        assertEquals("response", result);
+        verify(channel).basicPublish(eq("messages"), eq(""), isNull(), any(byte[].class));
     }
 
     @Test
@@ -78,6 +76,22 @@ public class ProducerServiceImplTest {
         ConnectionFactory factory = mock(ConnectionFactory.class);
 
         when(factory.newConnection()).thenReturn(null);
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
+
+        String result = service.produceMessage("test");
+
+        assertEquals("response", result);
+    }
+
+    @Test
+    public void shouldHandleChannelNullGracefully() throws Exception {
+
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+
+        when(factory.newConnection()).thenReturn(connection);
+        when(connection.createChannel()).thenReturn(null);
 
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
