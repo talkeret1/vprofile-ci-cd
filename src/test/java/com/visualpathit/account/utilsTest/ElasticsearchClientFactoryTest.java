@@ -78,4 +78,40 @@ class ElasticsearchClientFactoryTest {
                 IllegalStateException.class,
                 factory::createClient);
     }
+
+    @Test
+    void shouldThrowExceptionWhenConfigMissing() {
+
+        Components components = mock(Components.class);
+
+        when(components.getElasticsearchHost()).thenReturn("");
+        when(components.getElasticsearchPort()).thenReturn("9200");
+        when(components.getElasticsearchScheme()).thenReturn("http");
+
+        ElasticsearchClientFactory factory = new ElasticsearchClientFactory(components);
+
+        assertThrows(
+                IllegalStateException.class,
+                factory::createClient);
+    }
+
+    @Test
+    void createClientShouldNotThrowExceptionWhenConfigIsValid() {
+
+        Components components = mock(Components.class);
+
+        when(components.getElasticsearchHost()).thenReturn("localhost");
+        when(components.getElasticsearchPort()).thenReturn("9200");
+        when(components.getElasticsearchScheme()).thenReturn("http");
+
+        ElasticsearchClientFactory factory = new ElasticsearchClientFactory(components);
+
+        try {
+            RestHighLevelClient client = factory.createClient();
+            assertNotNull(client);
+            client.close();
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage());
+        }
+    }
 }

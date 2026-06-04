@@ -50,4 +50,12 @@ class RabbitMqUtilTest {
         rabbitMqUtil.setComponents(second);
         assertEquals("host2", RabbitMqUtil.getRabbitMqHost());
     }
+
+    @Test
+    void shouldFailWhenComponentsNotSet() {
+        Components components = mock(Components.class);
+        RabbitMqUtil rabbitMqUtil = new RabbitMqUtil();
+        rabbitMqUtil.setComponents(components);
+        assertEquals("localhost", RabbitMqUtil.getRabbitMqHost());
+    }
 }
