@@ -34,6 +34,9 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
+        <!-- SonarQube -->
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+
         <!-- Tests -->
         <junit.version>4.13.2</junit.version>
     </properties>
@@ -190,10 +193,10 @@
             <artifactId>log4j-core</artifactId>
         </dependency>
 
-        <dependency>
+        <!-- <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-        </dependency>
+        </dependency> -->
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -351,16 +354,29 @@
                 <version>0.8.12</version>
                 <executions>
                     <execution>
+                            <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
+
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
+                    </execution>
+
+                    <execution>
+                        <id>report-xml</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/jacoco</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
