@@ -10,10 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.visualpathit.account.model.User;
@@ -45,21 +42,21 @@ public class FileUploadController {
 		}
 
 		try {
-			byte[] bytes = file.getBytes(); // IOException handled below
+			byte[] bytes = file.getBytes();
 
 			String rootPath = System.getProperty("catalina.home");
-			File dir = new File(rootPath + File.separator + "tmpFiles");
-
-			if (!dir.exists()) {
-				boolean created = dir.mkdirs();
-				if (!created) {
-					logger.error("Failed to create directory: {}", dir.getAbsolutePath());
-					return "Server error: cannot create upload directory.";
-				}
+			if (rootPath == null || rootPath.isBlank()) {
+				return "Server error: invalid root path.";
 			}
 
-			File serverFile = new File(dir.getAbsolutePath()
-					+ File.separator + name + ".png");
+			File dir = new File(rootPath + File.separator + "tmpFiles");
+
+			if (!dir.exists() && !dir.mkdirs()) {
+				logger.error("Failed to create directory: {}", dir.getAbsolutePath());
+				return "Server error: cannot create upload directory.";
+			}
+
+			File serverFile = new File(dir, name + ".png");
 
 			User user = userService.findByUsername(userName);
 			if (user == null) {
@@ -82,7 +79,7 @@ public class FileUploadController {
 			logger.error("IO error during upload for user: {}", userName, e);
 			return "You failed to upload " + name + ".png => IO error";
 		} catch (Exception e) {
-			logger.error("File upload failed for user: {}", userName, e);
+			logger.error("General error during upload for user: {}", userName, e);
 			return "You failed to upload " + name + ".png => " + e.getMessage();
 		}
 	}
