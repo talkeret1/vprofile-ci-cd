@@ -1,6 +1,7 @@
 package com.visualpathit.account.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -12,8 +13,7 @@ import com.visualpathit.account.utils.RabbitMqUtil;
 @Controller
 public class RabbitMqController {
 
-    @Autowired
-    private RabbitMqUtil rabbitMqUtil;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqController.class);
 
     @GetMapping("/user/rabbit")
     public ModelAndView checkRabbitMqStatus() {
@@ -45,7 +45,7 @@ public class RabbitMqController {
 
         } catch (Exception e) {
 
-            e.printStackTrace();
+            LOGGER.error("Failed to connect to RabbitMQ", e);
 
             modelAndView.setViewName("rabbitmq-error");
 
@@ -55,7 +55,7 @@ public class RabbitMqController {
                 try {
                     connection.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.warn("Failed to close RabbitMQ connection", e);
                 }
             }
         }
