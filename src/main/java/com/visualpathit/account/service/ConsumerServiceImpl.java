@@ -10,20 +10,28 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConsumerServiceImpl implements ConsumerService {
 
-    /**
-        The name of the exchange.
-     */
     private static final String EXCHANGE_NAME = "messages";
 
     /**
-     *  The function that consumes messages from the broker(RabbitMQ)
-     * @param data
+     * Core business logic (testable)
      */
     @Override
-    @RabbitListener(bindings = @QueueBinding( value = @Queue(),
-            exchange = @Exchange(value = EXCHANGE_NAME, type = ExchangeTypes.FANOUT)))
     public void consumerMessage(byte[] data) {
+
+        if (data == null) {
+            System.out.println("null message received");
+            return;
+        }
+
         String consumedMessage = new String(data);
         System.out.println(" [x] Consumed  '" + consumedMessage + "'");
+    }
+
+    /**
+     * RabbitMQ entry point
+     */
+    @RabbitListener(bindings = @QueueBinding(value = @Queue, exchange = @Exchange(value = EXCHANGE_NAME, type = ExchangeTypes.FANOUT)))
+    public void receiveFromRabbit(byte[] data) {
+        consumerMessage(data);
     }
 }

@@ -37,17 +37,34 @@ public class ProducerServiceImpl implements ProducerService {
 
     @Override
     public String produceMessage(String message) {
-        try (Connection connection = connectionFactory.newConnection();
-                Channel channel = connection.createChannel()) {
+        Connection connection = null;
+        Channel channel = null;
+
+        try {
+            connection = connectionFactory.newConnection();
+            channel = connection.createChannel();
 
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
-            channel.basicPublish(EXCHANGE_NAME, "", null,
-                    message == null ? "".getBytes() : message.getBytes());
+
+            channel.basicPublish(
+                    EXCHANGE_NAME,
+                    "",
+                    null,
+                    message == null ? new byte[0] : message.getBytes());
 
             System.out.println(" [x] Sent '" + message + "'");
+
         } catch (IOException | TimeoutException e) {
             System.out.println("IOException");
             e.printStackTrace();
+        } finally {
+            try {
+                if (channel != null)
+                    channel.close();
+                if (connection != null)
+                    connection.close();
+            } catch (Exception ignored) {
+            }
         }
 
         return "response";

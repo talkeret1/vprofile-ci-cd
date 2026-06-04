@@ -7,6 +7,9 @@ import com.visualpathit.account.service.ProducerServiceImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 public class ProducerServiceImplTest {
@@ -65,6 +68,19 @@ public class ProducerServiceImplTest {
         ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
         String result = service.produceMessage(null);
+
+        assertEquals("response", result);
+    }
+
+    @Test
+    public void shouldHandleNullConnectionGracefully() throws Exception {
+
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        when(factory.newConnection()).thenReturn(null);
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
+
+        String result = service.produceMessage("test");
 
         assertEquals("response", result);
     }

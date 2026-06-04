@@ -3,43 +3,26 @@ package com.visualpathit.account.serviceTest;
 import com.visualpathit.account.service.ConsumerServiceImpl;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-
 public class ConsumerServiceImplTest {
 
     @Test
-    public void shouldConsumeMessageWithoutException() {
-
+    public void shouldConsumeMessage() {
         ConsumerServiceImpl service = new ConsumerServiceImpl();
 
-        byte[] data = "hello rabbit".getBytes();
-
-        service.consumerMessage(data);
-
-        assertTrue(true);
+        service.consumerMessage("hello rabbit".getBytes());
     }
 
     @Test
     public void shouldHandleEmptyMessage() {
-
         ConsumerServiceImpl service = new ConsumerServiceImpl();
 
-        byte[] data = new byte[0];
-
-        service.consumerMessage(data);
-
-        assertTrue(true);
+        service.consumerMessage(new byte[0]);
     }
 
     @Test
-    public void shouldHandleNullBytesSafely() {
-
+    public void shouldHandleNullSafely() {
         ConsumerServiceImpl service = new ConsumerServiceImpl();
 
-        try {
-            service.consumerMessage(null);
-        } catch (Exception e) {
-            assertTrue(true);
-        }
+        service.consumerMessage(null);
     }
 }
