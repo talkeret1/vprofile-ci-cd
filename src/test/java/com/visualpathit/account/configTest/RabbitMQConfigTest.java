@@ -1,36 +1,3 @@
-// package com.visualpathit.account.configTest;
-
-// import com.visualpathit.account.config.RabbitMQConfig;
-// import org.junit.Test;
-// import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-
-// public class RabbitMQConfigTest {
-
-//     @Test
-//     public void shouldHandleBeanWithoutException() {
-
-//         System.setProperty("RABBITMQ_SSL", "true");
-
-//         RabbitMQConfig config = new RabbitMQConfig();
-
-//         CachingConnectionFactory factory = new CachingConnectionFactory();
-
-//         config.postProcessBeforeInitialization(factory, "rabbitFactory");
-//     }
-
-//     @Test
-//     public void shouldHandleSSLDisabled() {
-
-//         System.setProperty("RABBITMQ_SSL", "false");
-
-//         RabbitMQConfig config = new RabbitMQConfig();
-
-//         CachingConnectionFactory factory = new CachingConnectionFactory();
-
-//         config.postProcessBeforeInitialization(factory, "rabbitFactory");
-//     }
-// }
-
 package com.visualpathit.account.configTest;
 
 import com.visualpathit.account.config.RabbitMQConfig;
@@ -42,7 +9,7 @@ import static org.junit.Assert.assertNotNull;
 public class RabbitMQConfigTest {
 
     @Test
-    public void shouldRunWithSSLEnabled() {
+    public void shouldEnableSslWhenTrue() {
 
         System.setProperty("RABBITMQ_SSL", "true");
 
@@ -56,9 +23,23 @@ public class RabbitMQConfigTest {
     }
 
     @Test
-    public void shouldRunWithSSLDisabled() {
+    public void shouldDisableSslWhenFalse() {
 
         System.setProperty("RABBITMQ_SSL", "false");
+
+        RabbitMQConfig config = new RabbitMQConfig();
+
+        CachingConnectionFactory factory = new CachingConnectionFactory();
+
+        Object result = config.postProcessBeforeInitialization(factory, "bean");
+
+        assertNotNull(result);
+    }
+
+    @Test
+    public void shouldHandleNullEnvGracefully() {
+
+        System.clearProperty("RABBITMQ_SSL");
 
         RabbitMQConfig config = new RabbitMQConfig();
 

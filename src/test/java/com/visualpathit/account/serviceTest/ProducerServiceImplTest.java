@@ -1,26 +1,51 @@
 package com.visualpathit.account.serviceTest;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import com.visualpathit.account.service.ProducerServiceImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 public class ProducerServiceImplTest {
 
     @Test
-    public void shouldReturnResponse() {
+    public void shouldReturnResponse() throws Exception {
 
-        ProducerServiceImpl service = new ProducerServiceImpl();
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+        Channel channel = mock(Channel.class);
 
-        String result = service.produceMessage("hello");
+        when(factory.newConnection()).thenReturn(connection);
+        when(connection.createChannel()).thenReturn(channel);
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
+
+        String result = service.produceMessage("hello rabbit");
 
         assertEquals("response", result);
+
+        verify(factory).newConnection();
+        verify(connection).createChannel();
+        verify(channel).exchangeDeclare("messages", "fanout");
+        verify(channel).basicPublish(eq("messages"), eq(""), isNull(), any(byte[].class));
+        verify(channel).close();
+        verify(connection).close();
     }
 
     @Test
-    public void shouldReturnResponseEvenWithEmptyMessage() {
+    public void shouldHandleEmptyMessage() throws Exception {
 
-        ProducerServiceImpl service = new ProducerServiceImpl();
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+        Channel channel = mock(Channel.class);
+
+        when(factory.newConnection()).thenReturn(connection);
+        when(connection.createChannel()).thenReturn(channel);
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
         String result = service.produceMessage("");
 
@@ -28,9 +53,16 @@ public class ProducerServiceImplTest {
     }
 
     @Test
-    public void shouldReturnResponseEvenWithNullMessage() {
+    public void shouldHandleNullMessageSafely() throws Exception {
 
-        ProducerServiceImpl service = new ProducerServiceImpl();
+        ConnectionFactory factory = mock(ConnectionFactory.class);
+        Connection connection = mock(Connection.class);
+        Channel channel = mock(Channel.class);
+
+        when(factory.newConnection()).thenReturn(connection);
+        when(connection.createChannel()).thenReturn(channel);
+
+        ProducerServiceImpl service = new ProducerServiceImpl(factory);
 
         String result = service.produceMessage(null);
 
