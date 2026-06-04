@@ -7,12 +7,12 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class RoleTest {
 
     @Test
-    public void shouldCreateRoleWithUsers() {
+    public void shouldFullyPopulateRoleFields() {
 
         // arrange
         User user = new User();
@@ -25,6 +25,8 @@ public class RoleTest {
         users.add(user);
 
         Role role = new Role();
+
+        // act
         role.setId(1L);
         role.setName("Admin");
         role.setUsers(users);
@@ -32,6 +34,8 @@ public class RoleTest {
         // assert
         assertEquals(Long.valueOf(1L), role.getId());
         assertEquals("Admin", role.getName());
+
+        assertNotNull(role.getUsers());
         assertEquals(1, role.getUsers().size());
     }
 }
