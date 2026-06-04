@@ -45,13 +45,9 @@ public class FileUploadController {
 		}
 
 		try {
-			byte[] bytes = file.getBytes();
+			byte[] bytes = file.getBytes(); // IOException handled below
 
 			String rootPath = System.getProperty("catalina.home");
-			if (rootPath == null || rootPath.isEmpty()) {
-				rootPath = System.getProperty("java.io.tmpdir");
-			}
-
 			File dir = new File(rootPath + File.separator + "tmpFiles");
 
 			if (!dir.exists()) {
@@ -75,7 +71,6 @@ public class FileUploadController {
 			userService.save(user);
 
 			try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(serverFile))) {
-
 				stream.write(bytes);
 			}
 
@@ -84,9 +79,8 @@ public class FileUploadController {
 			return "You successfully uploaded file=" + name + ".png";
 
 		} catch (IOException e) {
-			logger.error("IO error during file upload for user: {}", userName, e);
+			logger.error("IO error during upload for user: {}", userName, e);
 			return "You failed to upload " + name + ".png => IO error";
-
 		} catch (Exception e) {
 			logger.error("File upload failed for user: {}", userName, e);
 			return "You failed to upload " + name + ".png => " + e.getMessage();

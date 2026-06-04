@@ -1,19 +1,19 @@
 package com.visualpathit.account.controllerTest;
 
-import com.visualpathit.account.controller.FileUploadController;
-import com.visualpathit.account.model.User;
-import com.visualpathit.account.service.UserService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.web.multipart.MultipartFile;
-
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.visualpathit.account.controller.FileUploadController;
+import com.visualpathit.account.model.User;
+import com.visualpathit.account.service.UserService;
+
 public class FileUploadControllerTest {
 
         @InjectMocks
@@ -27,12 +27,16 @@ public class FileUploadControllerTest {
 
         @Before
         public void setup() {
+                MockitoAnnotations.initMocks(this);
+
+                // חשוב: מונע בעיות של path ב-Jenkins / מקומית
                 System.setProperty("catalina.home", System.getProperty("java.io.tmpdir"));
         }
 
         // -------------------------
-        // EMPTY FILE
+        // EMPTY FILE PATH
         // -------------------------
+
         @Test
         public void shouldRejectEmptyFile() {
 
@@ -46,11 +50,11 @@ public class FileUploadControllerTest {
         // -------------------------
         // USER NOT FOUND
         // -------------------------
+
         @Test
-        public void shouldReturnUserNotFound() throws Exception {
+        public void shouldReturnUserNotFound() {
 
                 when(file.isEmpty()).thenReturn(false);
-                when(file.getBytes()).thenReturn("abc".getBytes());
 
                 when(userService.findByUsername("john")).thenReturn(null);
 
@@ -60,8 +64,9 @@ public class FileUploadControllerTest {
         }
 
         // -------------------------
-        // SUCCESS FLOW (safe version - no real filesystem dependency)
+        // SUCCESS PATH
         // -------------------------
+
         @Test
         public void shouldUploadFileSuccessfully() throws Exception {
 
@@ -80,13 +85,12 @@ public class FileUploadControllerTest {
         // -------------------------
         // EXCEPTION PATH
         // -------------------------
+
         @Test
         public void shouldHandleExceptionGracefully() {
 
                 when(file.isEmpty()).thenReturn(false);
-
-                when(userService.findByUsername("john"))
-                                .thenThrow(new RuntimeException("fail"));
+                when(userService.findByUsername("john")).thenThrow(new RuntimeException("fail"));
 
                 String result = controller.uploadFileHandler("test", "john", file);
 
