@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -22,6 +23,7 @@ import com.visualpathit.account.service.UserServiceImpl;
 public class UserServiceImplTest {
 
     private UserServiceImpl service;
+    private AutoCloseable closeable;
 
     @Mock
     private UserRepository userRepository;
@@ -35,13 +37,20 @@ public class UserServiceImplTest {
     @Before
     public void setup() throws Exception {
 
-        MockitoAnnotations.initMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
 
         service = new UserServiceImpl();
 
         inject("userRepository", userRepository);
         inject("roleRepository", roleRepository);
         inject("bCryptPasswordEncoder", encoder);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (closeable != null) {
+            closeable.close();
+        }
     }
 
     private void inject(String fieldName, Object value) throws Exception {
