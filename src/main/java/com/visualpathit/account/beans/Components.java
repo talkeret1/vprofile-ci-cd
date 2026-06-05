@@ -1,5 +1,7 @@
 package com.visualpathit.account.beans;
 
+import com.visualpathit.account.utils.RabbitMqUtil;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -8,32 +10,47 @@ public class Components {
 
 	@Value("${memcached.active.host}")
 	private String activeHost;
+
 	@Value("${memcached.active.port}")
 	private String activePort;
+
 	@Value("${memcached.standBy.host}")
 	private String standByHost;
+
 	@Value("${memcached.standBy.port}")
 	private String standByPort;
 
 	@Value("${rabbitmq.address}")
 	private String rabbitMqHost;
+
 	@Value("${rabbitmq.port}")
 	private String rabbitMqPort;
+
 	@Value("${rabbitmq.username}")
 	private String rabbitMqUser;
+
 	@Value("${rabbitmq.password}")
 	private String rabbitMqPassword;
 
 	@Value("${elasticsearch.host}")
 	private String elasticsearchHost;
+
 	@Value("${elasticsearch.port}")
 	private String elasticsearchPort;
+
 	@Value("${elasticsearch.cluster}")
 	private String elasticsearchCluster;
+
 	@Value("${elasticsearch.node}")
 	private String elasticsearchNode;
+
 	@Value("${elasticsearch.scheme}")
 	private String elasticsearchScheme;
+
+	@PostConstruct
+	public void init() {
+		RabbitMqUtil.setComponents(this);
+	}
 
 	public String getActiveHost() {
 		return activeHost;
@@ -135,4 +152,7 @@ public class Components {
 		return elasticsearchScheme;
 	}
 
+	public void setElasticsearchScheme(String elasticsearchScheme) {
+		this.elasticsearchScheme = elasticsearchScheme;
+	}
 }

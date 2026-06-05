@@ -54,7 +54,6 @@ public class GlobalExceptionHandlerTest {
                 "An unexpected error occurred. Please try again later.");
     }
 
-    // 🔥 EXTRA EDGE CASE (helps Sonar coverage stability)
     @Test
     public void shouldStillReturnErrorPageWhenMessageIsNull() {
 

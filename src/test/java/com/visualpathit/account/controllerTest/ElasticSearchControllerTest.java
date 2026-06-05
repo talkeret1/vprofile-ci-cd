@@ -93,7 +93,6 @@ public class ElasticSearchControllerTest {
         RestHighLevelClient client = mock(RestHighLevelClient.class);
         when(clientFactory.createClient()).thenReturn(client);
 
-        // לא באמת נזרוק שגיאה, אבל מספיק כדי להפעיל לולאה מלאה
         String view = controller.insert(model);
 
         assertEquals("elasticeSearchRes", view);

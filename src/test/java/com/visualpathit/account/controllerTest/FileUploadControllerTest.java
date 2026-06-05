@@ -29,7 +29,6 @@ public class FileUploadControllerTest {
         public void setup() {
                 MockitoAnnotations.initMocks(this);
 
-                // חשוב: מונע בעיות של path ב-Jenkins / מקומית
                 System.setProperty("catalina.home", System.getProperty("java.io.tmpdir"));
         }
 
