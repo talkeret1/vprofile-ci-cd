@@ -2,9 +2,11 @@ package com.visualpathit.account.controllerTest;
 
 import com.visualpathit.account.controller.UserController;
 import com.visualpathit.account.model.User;
-import com.visualpathit.account.service.*;
+import com.visualpathit.account.service.SecurityService;
+import com.visualpathit.account.service.UserService;
 import com.visualpathit.account.utils.MemcachedUtils;
 import com.visualpathit.account.validator.UserValidator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,7 +17,7 @@ import org.springframework.validation.BindingResult;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -27,14 +29,16 @@ public class UserControllerTest {
 
 	@Mock
 	private UserService userService;
+
 	@Mock
 	private SecurityService securityService;
-	@Mock
-	private ProducerService producerService;
+
 	@Mock
 	private UserValidator userValidator;
+
 	@Mock
 	private Model model;
+
 	@Mock
 	private BindingResult bindingResult;
 
@@ -62,7 +66,7 @@ public class UserControllerTest {
 			BindingResult br = invocation.getArgument(1);
 			br.reject("error");
 			return null;
-		}).when(userValidator).validate(any(), any());
+		}).when(userValidator).validate(any(User.class), any(BindingResult.class));
 
 		when(bindingResult.hasErrors()).thenReturn(true);
 
@@ -79,7 +83,7 @@ public class UserControllerTest {
 		user.setPasswordConfirm("pass");
 
 		when(bindingResult.hasErrors()).thenReturn(false);
-		when(securityService.autologin(any(), any())).thenReturn(true);
+		when(securityService.autologin(anyString(), anyString())).thenReturn(true);
 
 		String view = controller.registration(user, bindingResult, model);
 
@@ -97,7 +101,7 @@ public class UserControllerTest {
 		user.setUsername("john");
 		user.setPassword("pass");
 
-		when(securityService.autologin(any(), any())).thenReturn(false);
+		when(securityService.autologin(anyString(), anyString())).thenReturn(false);
 
 		String view = controller.loginPost(user, model);
 
@@ -111,7 +115,7 @@ public class UserControllerTest {
 		user.setUsername("john");
 		user.setPassword("pass");
 
-		when(securityService.autologin(any(), any())).thenReturn(true);
+		when(securityService.autologin(anyString(), anyString())).thenReturn(true);
 
 		String view = controller.loginPost(user, model);
 
@@ -133,7 +137,7 @@ public class UserControllerTest {
 	}
 
 	// -------------------------
-	// CACHE HIT PATH
+	// CACHE TESTS
 	// -------------------------
 
 	@Test
@@ -154,10 +158,6 @@ public class UserControllerTest {
 		}
 	}
 
-	// -------------------------
-	// CACHE MISS + DB FALLBACK
-	// -------------------------
-
 	@Test
 	public void shouldReturnUserFromDbWhenCacheMiss() {
 
@@ -169,8 +169,8 @@ public class UserControllerTest {
 			mocked.when(() -> MemcachedUtils.memcachedGetData("2"))
 					.thenReturn(null);
 
-			mocked.when(() -> MemcachedUtils.memcachedSetData(any(), eq("2")))
-					.thenReturn("Data is From DB and Data Inserted In Cache !!");
+			mocked.when(() -> MemcachedUtils.memcachedSetData(any(User.class), eq("2")))
+					.thenReturn("OK");
 
 			when(userService.findById(2L)).thenReturn(dbUser);
 
@@ -180,10 +180,6 @@ public class UserControllerTest {
 			verify(model).addAttribute(eq("user"), eq(dbUser));
 		}
 	}
-
-	// -------------------------
-	// EXCEPTION PATH
-	// -------------------------
 
 	@Test
 	public void shouldHandleExceptionGracefully() {
@@ -222,17 +218,17 @@ public class UserControllerTest {
 	}
 
 	// -------------------------
-	// SIMPLE PAGES
+	// SIMPLE PAGES (FIXED)
 	// -------------------------
 
 	@Test
 	public void shouldReturnWelcome() {
-		assertEquals("welcome", controller.welcome(model));
+		assertEquals("welcome", controller.welcome());
 	}
 
 	@Test
 	public void shouldReturnIndex() {
-		assertEquals("index_home", controller.indexHome(model));
+		assertEquals("index_home", controller.indexHome());
 	}
 
 	@Test
