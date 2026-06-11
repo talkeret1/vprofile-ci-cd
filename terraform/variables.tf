@@ -17,13 +17,11 @@ variable "ecs_desired_count" {
 
 variable "db_user" {
   type        = string
-  default     = "admin_vp"
   description = "RDS username"
 }
 
 variable "db_pass" {
   type        = string
-  default     = "admin_vp"
   description = "RDS password"
 }
 
@@ -37,13 +35,12 @@ variable "db_name" {
 
 variable "rabbitmq_user" {
   type        = string
-  default     = "rabbit"
   description = "RabbitMQ username"
 }
 
 variable "rabbitmq_pass" {
-  type        = string
-  default     = "rabbitrabbit!"
+  type = string
+
   description = "RabbitMQ password"
 }
 
@@ -51,6 +48,5 @@ variable "rabbitmq_pass" {
 
 variable "bastion_ami_id" {
   type        = string
-  default     = "ami-0236922087fa98b6e" # Amazon Linux 2023 (us-east-1)
   description = "AMI for bastion host"
 }

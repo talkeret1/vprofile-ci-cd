@@ -19,11 +19,11 @@ resource "aws_ecs_task_definition" "vproapp_task" {
 
       environment = [
         {
-          name  = "DB_HOST"
+          name  = "DB_HOST_NAME"
           value = aws_db_instance.vprofile_db.address
         },
         {
-          name  = "DB_PORT"
+          name  = "DB_HOST_PORT"
           value = "3306"
         },
         {
@@ -39,22 +39,19 @@ resource "aws_ecs_task_definition" "vproapp_task" {
           value = var.db_name
         },
         {
-          name  = "MEMCACHED_HOST"
+          name  = "MEMCACHED_HOST_NAME"
           value = aws_elasticache_cluster.vprofile_memcached.cache_nodes[0].address
         },
         {
-          name = "RABBITMQ_HOST"
-          value = split(
-            ":",
-            replace(
-              aws_mq_broker.vprofile_rabbitmq.instances[0].endpoints[0],
-              "amqps://",
-              ""
-            )
-          )[0]
+          name  = "MEMCACHED_HOST_PORT"
+          value = "11211"
         },
         {
-          name  = "RABBITMQ_PORT"
+          name  = "RABBITMQ_HOST_NAME"
+          value = split(":", replace(aws_mq_broker.vprofile_rabbitmq.instances[0].endpoints[0], "amqps://", ""))[0]
+        },
+        {
+          name  = "RABBITMQ_HOST_PORT"
           value = "5671"
         },
         {
@@ -74,11 +71,11 @@ resource "aws_ecs_task_definition" "vproapp_task" {
           value = "/"
         },
         {
-          name  = "ELASTICSEARCH_HOST"
+          name  = "ELASTICSEARCH_HOST_NAME"
           value = aws_opensearch_domain.vprofile_opensearch.endpoint
         },
         {
-          name  = "ELASTICSEARCH_PORT"
+          name  = "ELASTICSEARCH_HOST_PORT"
           value = "443"
         },
         {

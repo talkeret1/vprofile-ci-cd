@@ -15,15 +15,15 @@ if [ ! -f /var/vprofile_db_initialized ]; then
 
   # Initialize mySQL database schema
 
-  until MYSQL_PWD=${DB_PASS} mysql -h ${DB_HOST} -u ${DB_USER} -e "SELECT 1"; do
+  until MYSQL_PWD=${DB_PASS} mysql -h ${DB_HOST_NAME} -u ${DB_USER} -e "SELECT 1"; do
     echo "Waiting for DB..."
     sleep 3
   done
 
-  MYSQL_PWD=${DB_PASS} mysql -h ${DB_HOST} -u ${DB_USER} ${DB_NAME} < /tmp/app/Docker-files/db/db_backup.sql
+  MYSQL_PWD=${DB_PASS} mysql -h ${DB_HOST_NAME} -u ${DB_USER} ${DB_NAME} < /tmp/app/Docker-files/db/db_backup.sql
   echo "Database schema imported successfully"
 
-  mysql -h ${DB_HOST} -u ${DB_USER} ${DB_NAME} -e "SHOW TABLES;"
+  mysql -h ${DB_HOST_NAME} -u ${DB_USER} ${DB_NAME} -e "SHOW TABLES;"
   echo "Database tables verified successfully"
 
   # Mark as done

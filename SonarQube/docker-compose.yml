@@ -11,6 +11,13 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
 
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fs http://localhost:9000/api/system/status | grep -q UP" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
 volumes:
   sonarqube_data:
   sonarqube_extensions:
