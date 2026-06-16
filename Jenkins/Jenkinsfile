@@ -92,10 +92,7 @@ pipeline {
 
         stage('ECR Login') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-credentials']
-                ]) {
+                withCredentials([aws(credentialsId: 'aws-credentials')]) {
                     sh """
                     aws ecr get-login-password --region $AWS_REGION | \
                     docker login --username AWS --password-stdin $ECR_REGISTRY
@@ -113,58 +110,54 @@ pipeline {
             }
         }
 
-        stage('Check ECS State') {
+        stage('Check ECS Status') {
             steps {
                 withCredentials([aws(credentialsId: 'aws-credentials')]) {
                     script {
-                        def running = sh(
+                        def serviceCount = sh(
                             script: """
                             aws ecs describe-services \
                             --cluster vprofile-cluster \
                             --services vproapp-service \
-                            --query "services[0].runningCount" \
-                            --output text
+                            --query "length(services)" \
+                            --output text \
+                            --region $AWS_REGION
                             """,
                             returnStdout: true
                         ).trim()
-
-                        env.IS_FIRST_DEPLOY = (running == "0") ? "true" : "false"
-
-                        echo "Running tasks: ${running}"
-                        echo "First deploy: ${env.IS_FIRST_DEPLOY}"
+                        echo "ECS service status: ${serviceCount == '1' ? 'EXISTS' : 'MISSING'}"
+                        env.ECS_EXISTS = (serviceCount == "1") ? "true" : "false"
+                        echo "ECS_EXISTS = ${env.ECS_EXISTS}"
                     }
                 }
             }
         }
 
         stage('Deploy ECS Service') {
+            when {
+                expression {
+                    env.ECS_EXISTS == "true"
+                }
+            }
+
             steps {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-credentials']
+                    credentialsId: 'aws-credentials']
                 ]) {
+                    echo "ECS service exists. Triggering new deployment..."
                     sh """
-                    if [ "$IS_FIRST_DEPLOY" = "true" ]; then
-                        echo "First deploy - setting desired count to 1"
-                        aws ecs update-service \
-                        --cluster vprofile-cluster \
-                        --service vproapp-service \
-                        --desired-count 1 \
-                        --region $AWS_REGION
-                    else
-                        echo "Regular deploy - force new deployment"
-                        aws ecs update-service \
-                        --cluster vprofile-cluster \
-                        --service vproapp-service \
-                        --force-new-deployment \
-                        --region $AWS_REGION
-                    fi
+                    aws ecs update-service \
+                    --cluster vprofile-cluster \
+                    --service vproapp-service \
+                    --force-new-deployment \
+                    --region $AWS_REGION
                     """
                 }
             }
         }
     }
-    
+
     post {
         always {
             sh 'docker system prune -f'

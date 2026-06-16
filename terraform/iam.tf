@@ -1,3 +1,7 @@
+# =========================
+# ECS Roles
+# =========================
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
 
@@ -55,6 +59,11 @@ resource "aws_iam_role_policy" "ecs_opensearch_access" {
     ]
   })
 }
+
+
+# =========================
+# EC2 / Bastion / SSM Roles
+# =========================
 
 resource "aws_iam_role" "ssm_role" {
   name = "vprofile-ec2-ssm-role"

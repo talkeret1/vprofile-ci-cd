@@ -6,7 +6,7 @@ SonarQube Configurations:
 - Default Name: admin
 - Default Password: admin
 
-- Add Manually Project:
+- Create a Manually Project:
     - Name: vprofile
     - Project Settings -> Webhook:
         - Name: jenkins

@@ -1,10 +1,16 @@
-# App variables
+# AWS ECR variables
 
-variable "app_port" {
-  type        = number
-  default     = 8080
-  description = "vprofile App host port"
+variable "ecr_registry" {
+  type        = string
+  description = "ECR registry URL"
 }
+
+variable "ecr_repo" {
+  type        = string
+  description = "ECR repository name"
+}
+
+# ECS variables
 
 variable "ecs_desired_count" {
   type        = number
@@ -12,6 +18,13 @@ variable "ecs_desired_count" {
   description = "Number of vprofile App instances"
 }
 
+# App variables
+
+variable "app_port" {
+  type        = number
+  default     = 8080
+  description = "vprofile App host port"
+}
 
 # RDS variables
 

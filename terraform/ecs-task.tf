@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
   container_definitions = jsonencode([
     {
       name  = "vproapp"
-      image = "943560362977.dkr.ecr.us-east-1.amazonaws.com/vprofile/app:latest"
+      image = "${var.ecr_registry}/${var.ecr_repo}:latest"
 
       portMappings = [{
         containerPort = var.app_port
