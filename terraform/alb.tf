@@ -27,7 +27,7 @@ resource "aws_lb_target_group" "vproapp_tg" {
   }
 }
 
-resource "aws_lb_listener" "vprofile_http" {
+resource "aws_lb_listener" "vprofile_http_listener" {
   load_balancer_arn = aws_lb.vprofile_alb.arn
   port              = 80
   protocol          = "HTTP"

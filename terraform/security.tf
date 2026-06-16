@@ -1,6 +1,6 @@
 resource "aws_security_group" "vprofile_ecs_sg" {
   name        = "vprofile-ecs-sg"
-  description = "Allow HTTP access to ECS tasks"
+  description = "Allow application traffic from ALB to ECS tasks"
   vpc_id      = aws_vpc.vprofile_vpc.id
 
   ingress {
@@ -25,7 +25,7 @@ resource "aws_security_group" "vprofile_ecs_sg" {
 
 resource "aws_security_group" "vprofile_alb_sg" {
   name        = "vprofile-alb-sg"
-  description = "Allow HTTP traffic"
+  description = "Allow HTTP traffic from the internet"
   vpc_id      = aws_vpc.vprofile_vpc.id
 
   ingress {
@@ -49,7 +49,7 @@ resource "aws_security_group" "vprofile_alb_sg" {
 
 resource "aws_security_group" "vprofile_db_sg" {
   name        = "vprofile-db-sg"
-  description = "Allow MySQL access only from ECS"
+  description = "Allow MySQL access from ECS tasks and Bastion host"
   vpc_id      = aws_vpc.vprofile_vpc.id
 
   ingress {
@@ -73,14 +73,14 @@ resource "aws_security_group" "vprofile_db_sg" {
 
 resource "aws_security_group" "vprofile_memcached_sg" {
   name        = "vprofile-memcached-sg"
-  description = "Allow Memcached access only from ECS"
+  description = "Allow Memcached access from ECS tasks and Bastion host"
   vpc_id      = aws_vpc.vprofile_vpc.id
 
   ingress {
     from_port       = 11211
     to_port         = 11211
     protocol        = "tcp"
-    security_groups = [aws_security_group.vprofile_ecs_sg.id]
+    security_groups = [aws_security_group.vprofile_ecs_sg.id, aws_security_group.vprofile_bastion_sg.id]
   }
 
   egress {
@@ -97,14 +97,14 @@ resource "aws_security_group" "vprofile_memcached_sg" {
 
 resource "aws_security_group" "vprofile_mq_sg" {
   name        = "vprofile-mq-sg"
-  description = "Allow RabbitMQ access only from ECS"
+  description = "Allow RabbitMQ TLS access from ECS tasks and Bastion host"
   vpc_id      = aws_vpc.vprofile_vpc.id
 
   ingress {
     from_port       = 5671
     to_port         = 5671
     protocol        = "tcp"
-    security_groups = [aws_security_group.vprofile_ecs_sg.id]
+    security_groups = [aws_security_group.vprofile_ecs_sg.id, aws_security_group.vprofile_bastion_sg.id]
   }
 
   egress {
@@ -121,14 +121,14 @@ resource "aws_security_group" "vprofile_mq_sg" {
 
 resource "aws_security_group" "vprofile_opensearch_sg" {
   name        = "vprofile-opensearch-sg"
-  description = "Allow OpenSearch access"
+  description = "Allow OpenSearch HTTPS access from ECS tasks and Bastion host"
   vpc_id      = aws_vpc.vprofile_vpc.id
 
   ingress {
     from_port       = 443
     to_port         = 443
     protocol        = "tcp"
-    security_groups = [aws_security_group.vprofile_ecs_sg.id]
+    security_groups = [aws_security_group.vprofile_ecs_sg.id, aws_security_group.vprofile_bastion_sg.id]
   }
 
   egress {

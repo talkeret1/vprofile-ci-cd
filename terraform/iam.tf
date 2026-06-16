@@ -62,7 +62,7 @@ resource "aws_iam_role_policy" "ecs_opensearch_access" {
 
 
 # =========================
-# EC2 / Bastion / SSM Roles
+# Bastion SSM Role
 # =========================
 
 resource "aws_iam_role" "ssm_role" {

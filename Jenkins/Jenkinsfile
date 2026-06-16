@@ -7,7 +7,10 @@ pipeline {
     }
 
     environment {
+        // ##############
         // AWS Variables:
+        // ##############
+
         AWS_REGION = "us-east-1"
 
         // ECR Variables:
@@ -16,8 +19,8 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
 
         // ECS Variables:
-        PRIVATE_SUBNETS = "subnet-0e50e624c69122c0b,subnet-0fa32fc914f95d698"
-        ECS_SECURITY_GROUP = "sg-0604b1974cacd54c1"
+        PRIVATE_SUBNETS = "subnet-05b7ab3f19d113488,subnet-0c66399547161c589"
+        ECS_SECURITY_GROUP = "sg-02ac3c4485b63f2e0"
     }
 
     stages {
@@ -117,8 +120,8 @@ pipeline {
                         def serviceCount = sh(
                             script: """
                             aws ecs describe-services \
-                            --cluster vprofile-cluster \
-                            --services vproapp-service \
+                            --cluster vprofile-ecs-cluster \
+                            --services vprofile-ecs-service \
                             --query "length(services)" \
                             --output text \
                             --region $AWS_REGION
@@ -148,8 +151,8 @@ pipeline {
                     echo "ECS service exists. Triggering new deployment..."
                     sh """
                     aws ecs update-service \
-                    --cluster vprofile-cluster \
-                    --service vproapp-service \
+                    --cluster vprofile-ecs-cluster \
+                    --service vprofile-ecs-service \
                     --force-new-deployment \
                     --region $AWS_REGION
                     """

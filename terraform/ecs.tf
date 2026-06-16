@@ -1,10 +1,10 @@
-resource "aws_ecs_cluster" "vprofile_cluster" {
-  name = "vprofile-cluster"
+resource "aws_ecs_cluster" "vprofile_ecs_cluster" {
+  name = "vprofile-ecs-cluster"
 }
 
-resource "aws_ecs_service" "vproapp_service" {
-  name            = "vproapp-service"
-  cluster         = aws_ecs_cluster.vprofile_cluster.id
+resource "aws_ecs_service" "vprofile_ecs_service" {
+  name            = "vprofile-ecs-service"
+  cluster         = aws_ecs_cluster.vprofile_ecs_cluster.id
   task_definition = aws_ecs_task_definition.vproapp_task.arn
   launch_type     = "FARGATE"
   desired_count   = var.ecs_desired_count
@@ -19,9 +19,7 @@ resource "aws_ecs_service" "vproapp_service" {
 
     assign_public_ip = false
 
-    security_groups = [
-      aws_security_group.vprofile_ecs_sg.id
-    ]
+    security_groups = [aws_security_group.vprofile_ecs_sg.id]
   }
 
   load_balancer {
@@ -31,7 +29,7 @@ resource "aws_ecs_service" "vproapp_service" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "ecs_logs" {
+resource "aws_cloudwatch_log_group" "vprofile_ecs_logs" {
   name              = "/ecs/vprofile"
   retention_in_days = 7
 }
