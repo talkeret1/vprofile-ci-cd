@@ -1,0 +1,478 @@
+cat *.json | jq -r '.Records[].eventName' | sort | uniq
+
+Broad Permissions Policies:
+---------------------------
+
+AmazonEC2ContainerRegistryFullAccess
+AmazonEC2FullAccess
+AmazonECS_FullAccess
+AmazonElastiCacheFullAccess
+AmazonMQFullAccess
+AmazonOpenSearchServiceFullAccess
+AmazonRDSFullAccess
+CloudWatchLogsFullAccess
+IAMFullAccess
+
+
+
+terraform destroy:
+------------------
+
+DeleteBroker
+DeleteCacheCluster
+DeleteCacheSubnetGroup
+
+DeleteCluster
+DeleteService
+DeregisterTaskDefinition
+
+DeleteDBInstance
+DeleteDBSubnetGroup
+
+DeleteDomain
+
+DeleteLoadBalancer
+DeleteListener
+DeleteTargetGroup
+
+DeleteVpc
+DeleteVpcEndpoints
+DeleteVpcResourceDeletion
+
+DeleteSubnet
+DeleteRouteTable
+DeleteInternetGateway
+DeleteSecurityGroup
+DeleteNatGateway
+DeleteNetworkInterface
+DeleteNetworkInterfacePermission
+
+DeleteLogGroup
+
+DeleteRole
+DeleteRolePolicy
+DeleteInstanceProfile
+
+DeregisterTargets
+
+DetachInternetGateway
+DetachNetworkInterface
+DetachRolePolicy
+
+DisassociateAddress
+DisassociateRouteTable
+
+ReleaseAddress
+
+RemoveRoleFromInstanceProfile
+
+TerminateInstances
+
+
+
+
+terraform apply:
+----------------
+
+AddRoleToInstanceProfile
+
+AllocateAddress
+AssociateAddress
+AssociateRouteTable
+
+AttachInternetGateway
+AttachRolePolicy
+
+AuthorizeSecurityGroupIngress
+AuthorizeSecurityGroupEgress
+
+CreateBroker
+CreateCacheCluster
+CreateCacheSubnetGroup
+CreateCluster
+CreateDBInstance
+CreateDBSubnetGroup
+CreateDomain
+CreateInstanceProfile
+CreateInternetGateway
+CreateListener
+CreateLoadBalancer
+CreateLogGroup
+CreateNatGateway
+CreateNetworkInterface
+CreateRole
+CreateRoute
+CreateRouteTable
+CreateSecurityGroup
+CreateService
+CreateSubnet
+CreateTargetGroup
+CreateVpc
+CreateVpcEndpoint
+
+ModifyLoadBalancerAttributes
+ModifySubnetAttribute
+ModifyTargetGroupAttributes
+ModifyVpcAttribute
+
+PutRetentionPolicy
+PutRolePolicy
+
+RegisterTargets
+RegisterTaskDefinition
+
+RunInstances
+
+--------------------------------------
+
+IAM
+----
+CreateRole
+CreateInstanceProfile
+PutRolePolicy
+AttachRolePolicy
+AddRoleToInstanceProfile
+
+VPC / Networking
+----------------
+CreateVpc
+CreateSubnet
+CreateRouteTable
+AssociateRouteTable
+CreateInternetGateway
+AttachInternetGateway
+CreateNatGateway
+AllocateAddress
+AssociateAddress
+CreateVpcEndpoint
+CreateRoute
+
+Security Groups
+---------------
+CreateSecurityGroup
+AuthorizeSecurityGroupIngress
+AuthorizeSecurityGroupEgress
+
+ECS
+---
+CreateCluster
+CreateService
+RegisterTaskDefinition
+
+Load Balancer
+-------------
+CreateLoadBalancer
+CreateTargetGroup
+CreateListener
+RegisterTargets
+ModifyLoadBalancerAttributes
+ModifyTargetGroupAttributes
+
+CloudWatch
+----------
+CreateLogGroup
+PutRetentionPolicy
+
+RDS
+---
+CreateDBSubnetGroup
+CreateDBInstance
+
+ElastiCache
+-----------
+CreateCacheSubnetGroup
+CreateCacheCluster
+
+Amazon MQ
+---------
+CreateBroker
+
+OpenSearch
+----------
+CreateDomain
+
+EC2 Bastion
+-----------
+RunInstances
+
+Misc Updates
+------------
+ModifySubnetAttribute
+ModifyVpcAttribute
+
+--------------------------------------
+
+
+
+
+
+Jenkins:
+--------
+
+GetAuthorizationToken
+
+BatchCheckLayerAvailability
+
+InitiateLayerUpload
+UploadLayerPart
+CompleteLayerUpload
+PutImage
+
+DescribeServices
+UpdateService
+
+
+----------------------------------------------
+
+
+
+
+Jenkins Policy:
+---------------
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ECRPush",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:DescribeImages",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ECSDeployment",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:UpdateService"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+
+
+
+
+Terraform-ECR Policy:
+---------------------
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TerraformECRRepository",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:CreateRepository",
+        "ecr:DeleteRepository",
+        "ecr:DescribeRepositories",
+        "ecr:ListTagsForResource"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+
+
+
+
+Terraform Policy:
+-----------------
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TerraformIAM",
+      "Effect": "Allow",
+      "Action": [
+        "iam:AddRoleToInstanceProfile",
+        "iam:AttachRolePolicy",
+        "iam:CreateInstanceProfile",
+        "iam:CreateRole",
+        "iam:DeleteInstanceProfile",
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:GetInstanceProfile",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:ListRolePolicies",
+        "iam:PutRolePolicy",
+        "iam:RemoveRoleFromInstanceProfile",
+        "iam:ListRoleTags",
+        "iam:TagRole",
+        "iam:UntagRole"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformEC2VPC",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AllocateAddress",
+        "ec2:AssociateAddress",
+        "ec2:AssociateRouteTable",
+        "ec2:AttachInternetGateway",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateInternetGateway",
+        "ec2:CreateNatGateway",
+        "ec2:CreateNetworkInterface",
+        "ec2:CreateRoute",
+        "ec2:CreateRouteTable",
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateSubnet",
+        "ec2:CreateVpc",
+        "ec2:CreateVpcEndpoint",
+        "ec2:DeleteInternetGateway",
+        "ec2:DeleteNatGateway",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DeleteNetworkInterfacePermission",
+        "ec2:DeleteRouteTable",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteSubnet",
+        "ec2:DeleteVpc",
+        "ec2:DeleteVpcEndpoints",
+        "ec2:Describe*",
+        "ec2:DetachInternetGateway",
+        "ec2:DetachNetworkInterface",
+        "ec2:DisassociateAddress",
+        "ec2:DisassociateRouteTable",
+        "ec2:ModifySubnetAttribute",
+        "ec2:ModifyVpcAttribute",
+        "ec2:ReleaseAddress",
+        "ec2:RunInstances",
+        "ec2:TerminateInstances"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformECS",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:CreateCluster",
+        "ecs:CreateService",
+        "ecs:DeleteCluster",
+        "ecs:DeleteService",
+        "ecs:DeregisterTaskDefinition",
+        "ecs:Describe*",
+        "ecs:RegisterTaskDefinition",
+        "ecs:UpdateService"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformELB",
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:CreateLoadBalancer",
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:DeleteListener",
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:DeleteTargetGroup",
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:ModifyLoadBalancerAttributes",
+        "elasticloadbalancing:ModifyTargetGroupAttributes",
+        "elasticloadbalancing:RegisterTargets",
+        "elasticloadbalancing:Describe*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformRDS",
+      "Effect": "Allow",
+      "Action": [
+        "rds:CreateDBInstance",
+        "rds:CreateDBSubnetGroup",
+        "rds:DeleteDBInstance",
+        "rds:DeleteDBSubnetGroup",
+        "rds:Describe*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformElastiCache",
+      "Effect": "Allow",
+      "Action": [
+        "elasticache:CreateCacheCluster",
+        "elasticache:CreateCacheSubnetGroup",
+        "elasticache:DeleteCacheCluster",
+        "elasticache:DeleteCacheSubnetGroup",
+        "elasticache:Describe*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformMQ",
+      "Effect": "Allow",
+      "Action": [
+        "mq:CreateBroker",
+        "mq:DeleteBroker",
+        "mq:Describe*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformOpenSearch",
+      "Effect": "Allow",
+      "Action": [
+        "es:CreateDomain",
+        "es:DeleteDomain",
+        "es:UpdateDomainConfig",
+        "es:Describe*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformCloudWatch",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DeleteLogGroup",
+        "logs:PutRetentionPolicy",
+        "logs:Describe*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformECRRead",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformGeneralRead",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity",
+        "kms:DescribeKey",
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:CreateGrant",
+        "kms:RetireGrant"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

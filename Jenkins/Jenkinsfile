@@ -117,20 +117,21 @@ pipeline {
             steps {
                 withCredentials([aws(credentialsId: 'aws-credentials')]) {
                     script {
-                        def serviceCount = sh(
+
+                        def status = sh(
                             script: """
                             aws ecs describe-services \
-                            --cluster vprofile-ecs-cluster \
-                            --services vprofile-ecs-service \
-                            --query "length(services)" \
-                            --output text \
-                            --region $AWS_REGION
+                            --cluster vprofile-cluster \
+                            --services vproapp-service \
+                            --query "services[0].status" \
+                            --output text 2>/dev/null || echo "MISSING"
                             """,
                             returnStdout: true
                         ).trim()
-                        echo "ECS service status: ${serviceCount == '1' ? 'EXISTS' : 'MISSING'}"
-                        env.ECS_EXISTS = (serviceCount == "1") ? "true" : "false"
-                        echo "ECS_EXISTS = ${env.ECS_EXISTS}"
+
+                        echo "ECS service status: ${status}"
+
+                        env.ECS_EXISTS = (status == "ACTIVE") ? "true" : "false"
                     }
                 }
             }
@@ -138,9 +139,7 @@ pipeline {
 
         stage('Deploy ECS Service') {
             when {
-                expression {
-                    env.ECS_EXISTS == "true"
-                }
+                expression { return env.ECS_EXISTS == "true" }
             }
 
             steps {
@@ -148,11 +147,10 @@ pipeline {
                     [$class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-credentials']
                 ]) {
-                    echo "ECS service exists. Triggering new deployment..."
                     sh """
                     aws ecs update-service \
-                    --cluster vprofile-ecs-cluster \
-                    --service vprofile-ecs-service \
+                    --cluster vprofile-cluster \
+                    --service vproapp-service \
                     --force-new-deployment \
                     --region $AWS_REGION
                     """
