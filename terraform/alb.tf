@@ -13,8 +13,8 @@ resource "aws_lb" "vprofile_alb" {
   }
 }
 
-resource "aws_lb_target_group" "vproapp_tg" {
-  name        = "vproapp-tg"
+resource "aws_lb_target_group" "vprofile_tg" {
+  name        = "vprofile-tg"
   port        = var.app_port
   protocol    = "HTTP"
   target_type = "ip"
@@ -34,6 +34,6 @@ resource "aws_lb_listener" "vprofile_http_listener" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.vproapp_tg.arn
+    target_group_arn = aws_lb_target_group.vprofile_tg.arn
   }
 }

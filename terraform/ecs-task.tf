@@ -1,5 +1,5 @@
-resource "aws_ecs_task_definition" "vproapp_task" {
-  family                   = "vproapp-task"
+resource "aws_ecs_task_definition" "vprofile_task_definition" {
+  family                   = "vprofile-task-definition"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "512"
@@ -9,7 +9,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
 
   container_definitions = jsonencode([
     {
-      name  = "vproapp"
+      name  = "vprofile-app"
       image = "${var.ecr_registry}/${var.ecr_repo}:latest"
 
       portMappings = [{
@@ -89,7 +89,7 @@ resource "aws_ecs_task_definition" "vproapp_task" {
         options = {
           awslogs-group         = "/ecs/vprofile"
           awslogs-region        = "us-east-1"
-          awslogs-stream-prefix = "vproapp"
+          awslogs-stream-prefix = "vprofile-app"
         }
       }
     }

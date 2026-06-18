@@ -3,7 +3,7 @@
 # =========================
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
+  name = "vprofile-ecsTaskExecutionRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -18,7 +18,7 @@ resource "aws_iam_role" "ecs_task_execution_role" {
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  name = "ecsTaskRole"
+  name = "vprofile-ecsTaskRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -86,6 +86,6 @@ resource "aws_iam_role_policy_attachment" "ssm_attach" {
 }
 
 resource "aws_iam_instance_profile" "ssm_profile" {
-  name = "ec2-ssm-profile"
+  name = "vprofile-ec2-ssm-profile"
   role = aws_iam_role.ssm_role.name
 }
