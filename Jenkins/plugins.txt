@@ -3,6 +3,8 @@ locale
 docker-plugin
 docker-workflow
 configuration-as-code
+job-dsl
+workflow-aggregator
 git
 sonar
 pipeline-stage-view

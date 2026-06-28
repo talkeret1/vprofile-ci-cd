@@ -1,4 +1,4 @@
-FROM jenkins/jenkins:lts-jdk21
+FROM jenkins/jenkins:2.555.3-lts-jdk21
 
 USER root
 
@@ -16,7 +16,7 @@ RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
 RUN echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
     > /etc/apt/sources.list.d/trivy.list
 
-RUN apt-get update && \ 
+RUN apt-get update && \
     apt-get install -y trivy
 
 RUN usermod -aG docker jenkins
@@ -27,6 +27,8 @@ USER jenkins
 
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 COPY casc.yaml /usr/share/jenkins/ref/casc.yaml
+COPY jobs.groovy /usr/share/jenkins/ref/jobs.groovy
+COPY Jenkinsfile /usr/share/jenkins/ref/Jenkinsfile
 
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
 

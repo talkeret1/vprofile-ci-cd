@@ -63,6 +63,10 @@ Once connected, the Bastion Host can be used to:
 
 ## 📚 Documentation
 
+<br>
+
+- [About the Application](./docs/About_the_Application.md)
+- [Setup Instructions](./docs/Setup_Instructions.md)
 - [Jenkins Setup](./Jenkins/README.md)
 - [SonarQube Setup](./SonarQube/README.md)
 - [Terraform Infrastructure](./terraform/README.md)
@@ -98,100 +102,6 @@ This project supports two deployment models:
 <br>
 <br>
 
-## 🧪 Infrastructure Validation Scenarios
-
-<br>
-
-The application serves as an integration validation platform.
-
-Each feature intentionally interacts with a specific infrastructure component, allowing verification that all services are correctly deployed, connected, and operational.
-
-### 1. *Database Validation:*
-**Login page:**
-- Username: `admin_vp`
-- Password: `admin_vp`
-
-If login succeeds → MySQL connection is working.
-
-<p align="left">
-  <img src="./docs/images/ApplicationLoginPage.png" alt="Login Page" width="400">
-</p>
-
-<br>
-
----
-
-<br>
-
-After login page, on the main page, you will see the following 3 buttons to test the infrastructure components:
-
-<p align="left">
-  <img src="./docs/images/ApplicationButtons.png" alt="Buttons" width="700">
-</p>
-
-1. **All Users** button → verifies Memcached.
-2. **RabbitMQ** button → verifies RabbitMQ.
-3. **Index Users** button → verifies Elasticsearch/OpenSearch.
-
-<br>
-
----
-
-<br>
-
-### 2. *Memcached Validation:*
-**After login:**
-- Click **All Users** button:
-- Click on one of the users Id's (to open a user profile)
-- Go back to the previous page and click again on the same user Id
-
-You will see:
-- First load: **[Data is From DB and Data Inserted In Cache !!]**
-- Second load: **[Data is From Cache]**
-
-This confirms Memcached caching works.
-
-Example screenshot:
-
-<p align="left">
-  <img src="./docs/images/ApplicationMemcachedValidation.png" alt="Memcached Validation" width="850">
-</p>
-
-<br>
-
----
-
-<br>
-
-### 3. *RabbitMQ Validation:*
-Click **RabbitMQ** button:
-
-Example screenshot of the expected output:
-
-<p align="left">
-  <img src="./docs/images/ApplicationRabbitMqValidation.png" alt="RabbitMq Validation" width="300">
-</p>
-
-<br>
-
----
-
-<br>
-
-### 4. *OpenSearch Validation:*
-Click **Index Users** button:
-
-Example screenshot of the expected output:
-
-<p align="left">
-  <img src="./docs/images/ApplicationOpenSearchValidation.png" alt="OpenSearch Validation" width="400">
-</p>
-
-<br>
-
----
-
-<br>
 
 ## 🚀 Deployment Option 1: **Local Docker Compose**
 

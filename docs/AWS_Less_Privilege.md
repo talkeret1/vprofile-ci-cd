@@ -1,235 +1,6 @@
-cat *.json | jq -r '.Records[].eventName' | sort | uniq
+### Policy for Jenkins:
 
-Broad Permissions Policies:
----------------------------
-
-AmazonEC2ContainerRegistryFullAccess
-AmazonEC2FullAccess
-AmazonECS_FullAccess
-AmazonElastiCacheFullAccess
-AmazonMQFullAccess
-AmazonOpenSearchServiceFullAccess
-AmazonRDSFullAccess
-CloudWatchLogsFullAccess
-IAMFullAccess
-
-
-
-terraform destroy:
-------------------
-
-DeleteBroker
-DeleteCacheCluster
-DeleteCacheSubnetGroup
-
-DeleteCluster
-DeleteService
-DeregisterTaskDefinition
-
-DeleteDBInstance
-DeleteDBSubnetGroup
-
-DeleteDomain
-
-DeleteLoadBalancer
-DeleteListener
-DeleteTargetGroup
-
-DeleteVpc
-DeleteVpcEndpoints
-DeleteVpcResourceDeletion
-
-DeleteSubnet
-DeleteRouteTable
-DeleteInternetGateway
-DeleteSecurityGroup
-DeleteNatGateway
-DeleteNetworkInterface
-DeleteNetworkInterfacePermission
-
-DeleteLogGroup
-
-DeleteRole
-DeleteRolePolicy
-DeleteInstanceProfile
-
-DeregisterTargets
-
-DetachInternetGateway
-DetachNetworkInterface
-DetachRolePolicy
-
-DisassociateAddress
-DisassociateRouteTable
-
-ReleaseAddress
-
-RemoveRoleFromInstanceProfile
-
-TerminateInstances
-
-
-
-
-terraform apply:
-----------------
-
-AddRoleToInstanceProfile
-
-AllocateAddress
-AssociateAddress
-AssociateRouteTable
-
-AttachInternetGateway
-AttachRolePolicy
-
-AuthorizeSecurityGroupIngress
-AuthorizeSecurityGroupEgress
-
-CreateBroker
-CreateCacheCluster
-CreateCacheSubnetGroup
-CreateCluster
-CreateDBInstance
-CreateDBSubnetGroup
-CreateDomain
-CreateInstanceProfile
-CreateInternetGateway
-CreateListener
-CreateLoadBalancer
-CreateLogGroup
-CreateNatGateway
-CreateNetworkInterface
-CreateRole
-CreateRoute
-CreateRouteTable
-CreateSecurityGroup
-CreateService
-CreateSubnet
-CreateTargetGroup
-CreateVpc
-CreateVpcEndpoint
-
-ModifyLoadBalancerAttributes
-ModifySubnetAttribute
-ModifyTargetGroupAttributes
-ModifyVpcAttribute
-
-PutRetentionPolicy
-PutRolePolicy
-
-RegisterTargets
-RegisterTaskDefinition
-
-RunInstances
-
---------------------------------------
-
-IAM
-----
-CreateRole
-CreateInstanceProfile
-PutRolePolicy
-AttachRolePolicy
-AddRoleToInstanceProfile
-
-VPC / Networking
-----------------
-CreateVpc
-CreateSubnet
-CreateRouteTable
-AssociateRouteTable
-CreateInternetGateway
-AttachInternetGateway
-CreateNatGateway
-AllocateAddress
-AssociateAddress
-CreateVpcEndpoint
-CreateRoute
-
-Security Groups
----------------
-CreateSecurityGroup
-AuthorizeSecurityGroupIngress
-AuthorizeSecurityGroupEgress
-
-ECS
----
-CreateCluster
-CreateService
-RegisterTaskDefinition
-
-Load Balancer
--------------
-CreateLoadBalancer
-CreateTargetGroup
-CreateListener
-RegisterTargets
-ModifyLoadBalancerAttributes
-ModifyTargetGroupAttributes
-
-CloudWatch
-----------
-CreateLogGroup
-PutRetentionPolicy
-
-RDS
----
-CreateDBSubnetGroup
-CreateDBInstance
-
-ElastiCache
------------
-CreateCacheSubnetGroup
-CreateCacheCluster
-
-Amazon MQ
----------
-CreateBroker
-
-OpenSearch
-----------
-CreateDomain
-
-EC2 Bastion
------------
-RunInstances
-
-Misc Updates
-------------
-ModifySubnetAttribute
-ModifyVpcAttribute
-
---------------------------------------
-
-
-
-
-
-Jenkins:
---------
-
-GetAuthorizationToken
-
-BatchCheckLayerAvailability
-
-InitiateLayerUpload
-UploadLayerPart
-CompleteLayerUpload
-PutImage
-
-DescribeServices
-UpdateService
-
-
-----------------------------------------------
-
-
-
-
-Jenkins Policy:
----------------
-
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -260,13 +31,13 @@ Jenkins Policy:
     }
   ]
 }
+```
 
+<br>
 
+### Policy for Terraform-ECR:
 
-
-Terraform-ECR Policy:
----------------------
-
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -283,13 +54,13 @@ Terraform-ECR Policy:
     }
   ]
 }
+```
 
+<br>
 
+### Policy for Terraform CI/CD:
 
-
-Terraform Policy:
------------------
-
+```json
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -532,3 +303,4 @@ Terraform Policy:
 		}
 	]
 }
+```

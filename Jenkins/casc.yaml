@@ -25,3 +25,15 @@ tool:
               installers:
                 - maven:
                     id: "3.9.15"
+                    
+  sonarRunnerInstallation:
+    installations:
+      - name: "SonarScanner 8.1"
+        properties:
+          - installSource:
+              installers:
+                - sonarRunnerInstaller:
+                    id: "8.1.0.6389"
+
+jobs:
+  - file: /usr/share/jenkins/ref/jobs.groovy
