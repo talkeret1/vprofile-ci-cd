@@ -14,13 +14,13 @@ pipeline {
         AWS_REGION = "us-east-1"
 
         // ECR Variables:
-        ECR_REGISTRY = "943560362977.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_REGISTRY = "xxxxxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com"
         ECR_REPO = "vprofile/app"
         IMAGE_TAG = "${BUILD_NUMBER}"
 
         // ECS Variables:
-        PRIVATE_SUBNETS = "subnet-05b7ab3f19d113488,subnet-0c66399547161c589"
-        ECS_SECURITY_GROUP = "sg-02ac3c4485b63f2e0"
+        PRIVATE_SUBNETS = "subnet-xxxxxxxxxxxxxxxxx,subnet-xxxxxxxxxxxxxxxxx"
+        ECS_SECURITY_GROUP = "sg-xxxxxxxxxxxxxxxxx"
     }
 
     stages {

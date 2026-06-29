@@ -12,7 +12,7 @@ To Run This Project You need to Setup Jenkins and SonarQube Docker Containers an
 
 ![Jenkins Pipeline](./images/Jenkins_Pipeline.png)
 
-### Launch Jenkins Container:
+### 1. Launch Jenkins Container:
 
 <br>
 
@@ -37,7 +37,7 @@ docker-compose up -d
 
 SonarQube Code Quality is used for static code analysis in the CI/CD pipeline.
 
-### Launch SonarQube Container:
+### 2. Launch SonarQube Container:
 
 **Run:**
 
@@ -58,7 +58,7 @@ Default login:
 
 ### 📦 Project Setup:
 
-#### 1. Create new project manually:
+#### 3. Create new project manually:
 - Name it `vprofile`
 
 <br>
@@ -69,8 +69,14 @@ Default login:
 
 <br>
 
-#### 2. Configure a webhook for the jenkins pipeline:
-- Set this URL: `http://host.docker.internal:8080/sonarqube-webhook/`
+#### 4. Configure a webhook for the jenkins pipeline:
+
+<br>
+
+- Navigate to: **Projects → vprofile → Project Settings → Webhooks**
+- Click on **"Create a Webhook"** and configure as follows:
+  - Name: `jenkins`
+  - URL: `http://host.docker.internal:8080/sonarqube-webhook/`
 
 <br>
 
@@ -80,11 +86,28 @@ Default login:
 
 <br>
 
+#### 5. Generate Token for Jenkins:
+
+<br>
+
+- Navigate to: **Administrator → My Account**
+- Click on the **Security** Tab
+- **Generate** a Token, name it `vprofile` 
+- Copy the Token to use in Jenkins
+
+<br>
+
+<p align="left">
+  <img src="./images/SonarQube_Generate_Token.png" alt="SonarQube - Generate Token" width="800">
+</p>
+
+<br>
+
 ### 🔐 Jenkins Integration:
 
-#### 1. Add Sonar Token in Jenkins:
-- Manage Jenkins → Credentials
-- Kind: Secret Text
+#### 6. Add Sonar Token in Jenkins:
+- Navigate to: **Jenkins → Credentials**
+- Credential Type: Secret Text
 - ID: `sonarqube-token`
 
 <br>
@@ -93,49 +116,54 @@ Default login:
   <img src="./images/Jenkins_SonarQube_Credentials.png" alt="Jenkins SonarQube Credentials" width="800">
 </p>
 
-<br>
-
----
-
-### Configure SonarQube Server in Jenkins
-- Name: `sonarqube`
-- URL: `http://host.docker.internal:9000`
-- Token: `sonarqube-token`
-
----
-
-## 🧪 Scanner Configuration
-
-Tool name in Jenkins:
-
-SonarScanner
-
----
-
-## 📸 Screenshots
-
-- `screenshots/sonarqube-dashboard.png`
-- `screenshots/sonarqube-project.png`
-- `screenshots/sonarqube-quality-gate.png`
-
----
-
-## 🔁 Pipeline Flow
-
-- Jenkins triggers analysis
-- SonarQube runs scan
-- Quality gate validates results
-- Jenkins continues or fails pipeline
-
 <br><br><br>
 
 ## Step 3: AWS Configurations:
 
-1. Create ECR Repository name it vprofile/app:
+#### 7. Create **IAM User** with broad permissions policies:
+
+- `AmazonEC2ContainerRegistryFullAccess`
+- `AmazonEC2FullAccess`
+- `AmazonECS_FullAccess`
+- `AmazonElastiCacheFullAccess`
+- `AmazonMQFullAccess`
+- `AmazonOpenSearchServiceFullAccess`
+- `AmazonRDSFullAccess`
+- `CloudWatchLogsFullAccess`
+- `IAMFullAccess`
+
+❗ Or with [AWS Less Privilege](AWS_Less_Privilege.md) Policies.
 
 <br>
 
-  You can use the terraform-ecr or manually from AWS Console
+#### 8. Create **Access keys** for the IAM User:
+- ID: `aws-credentials`
+- Access Key ID: AWS Access Key ID
+- Secret Access Key: AWS Secret Key
+
+<br>
+
+### 🔐 Jenkins Integration:
+
+#### 9. Add AWS Credentials in Jenkins:
+- Navigate to: **Jenkins → Credentials**
+- Credential Type: AWS Credentials
+- ID: `aws-credentials`
+
+<br>
+
+<p align="left">
+  <img src="./images/Jenkins_AWS_Credentials.png" alt="Jenkins AWS Credentials" width="800">
+</p>
+
+<br><br><br>
+
+## Step 4: Create ECR Repository:
+
+<br>
+
+  You can use the **terraform-ecr** or you can create it manually from the AWS Console.
+  - Repository name: `vprofile/app`
 
 **Run:**
 
@@ -144,34 +172,36 @@ cd terraform-ecr
 terraform init
 terraform apply
 ```
+<br>
+
+<p align="left">
+  <img src="./images/Terraform_ECR_Output.png" alt="Terraform ECR Output" width="500">
+</p>
 
 <br>
 
-2. Create IAM User with broad permissions policies:
-
-- AmazonEC2ContainerRegistryFullAccess
-- AmazonEC2FullAccess
-- AmazonECS_FullAccess
-- AmazonElastiCacheFullAccess
-- AmazonMQFullAccess
-- AmazonOpenSearchServiceFullAccess
-- AmazonRDSFullAccess
-- CloudWatchLogsFullAccess
-- IAMFullAccess
-
-Or with [AWS Less Privilege](AWS_Less_Privilege.md) Policies.
+When Apply Complete copy the output value `ecr_registry` and update the **Jenkinsfile**.
 
 <br>
 
-3. Create Access keys:
-  - Copy the Access Key and Secret Key into Jenkins Credencials:
-    - ID: aws-credentials
-    - Access Key ID: AWS Access Key ID
-    - Secret Access Key: AWS Secret Key
+<p align="left">
+  <img src="./images/Jenkins_Pipeline_Script.png" alt="Jenkins Pipeline Script" width="1000">
+</p>
 
 <br><br><br>
 
-## Step 4: AWS Infrastructure Setup with Terraform
+## Step 5: Load Image to ECR:
+
+- The **first pipeline** execution is used as a **bootstrap step**. Jenkins logs in to Amazon ECR and pushes the initial Docker image, allowing the ECS infrastructure to be provisioned. 
+- After the **ECS infrastructure is available**, every subsequent pipeline execution pushes a new image to Amazon ECR and deploys it to Amazon ECS.
+
+**Run the jenkins pipeline:**
+
+![Jenkins Bootstrap Pipeline](./images/Jenkins_Bootstrap_Pipeline.png)
+
+<br>
+
+## Step 6: Build the AWS Infrastructure with Terraform:
 
 Terraform provisions:
 
