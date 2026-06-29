@@ -90,7 +90,7 @@ Default login:
 <br>
 
 <p align="left">
-  <img src="./images/Jenkins_SonarQube_C.png" alt="Jenkins SonarQube Creds" width="800">
+  <img src="./images/Jenkins_SonarQube_Credentials.png" alt="Jenkins SonarQube Credentials" width="800">
 </p>
 
 <br>

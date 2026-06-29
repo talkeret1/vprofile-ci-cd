@@ -35,5 +35,12 @@ tool:
                 - sonarRunnerInstaller:
                     id: "8.1.0.6389"
 
+unclassified:
+  sonarGlobalConfiguration:
+    installations:
+      - name: "sonarqube"
+        serverUrl: "http://host.docker.internal:9000"
+        credentialsId: "sonarqube-token"
+
 jobs:
   - file: /usr/share/jenkins/ref/jobs.groovy
