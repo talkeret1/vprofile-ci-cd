@@ -2,11 +2,41 @@
 
 <br>
 
+End-to-end DevOps project demonstrating automated infrastructure provisioning, CI/CD, security scanning, code quality analysis and deployment to AWS ECS.
+
+<br>
+
+### Features:
+
+- Infrastructure as Code with Terraform
+- Jenkins CI/CD Pipeline
+- SonarQube Code Analysis
+- Trivy Security Scanning
+- Docker Containerization
+- AWS ECS Deployment
+- Amazon ECR Integration
+- Quality Gate Enforcement
+- Least Privilege IAM Policies
+
+<br>
+
 ## 📌 Overview
 
 <br>
 
 This project is a full DevOps CI/CD pipeline for deploying a Java Spring-based application into AWS ECS using Terraform, Jenkins, Docker and SonarQube, with an additional option to run the entire system locally using Docker Compose.
+
+<br>
+
+| Local | AWS |
+|-------|-----|
+| Docker Compose | ECS Fargate |
+| MySQL | Amazon RDS |
+| RabbitMQ | Amazon MQ |
+| Elasticsearch | OpenSearch |
+| Memcached | ElastiCache |
+
+<br>
 
 The goal of this project is to validate integration between multiple services:
 - MySQL (RDS)
@@ -193,7 +223,6 @@ Jenkins Pipeline:
 
 ## 🙏 Credits:
 
-The application itself is based on the original VProfile project created by **Imran Teli**.
+This project uses the original VProfile application developed by **Imran Teli** (https://github.com/hkhcoder/vprofile-project).
 
-Original project:
-https://github.com/hkhcoder/vprofile-project
+The DevOps automation, AWS infrastructure, Terraform modules, Jenkins pipeline, Docker configuration and documentation were designed and implemented as part of this project.

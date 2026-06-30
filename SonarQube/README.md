@@ -1,69 +1,48 @@
 # SonarQube Code Quality
 
+<br>
+
 ## 📌 Overview
+
+<br>
 
 SonarQube is used for static code analysis in the CI/CD pipeline.
 
----
+<br>
 
-## 🚀 Access
+## Analysis Flow
 
-http://localhost:9000
+Source Code
 
+↓
 
-Default login:
-- Username: `admin`
-- Password: `admin`
+Sonar Scanner
 
----
+↓
 
-## 📦 Project Setup
+SonarQube
 
-1. Create project manually:
-   - Name: `vprofile`
+↓
 
-2. Add webhook:
+Quality Gate
 
-   - http://host.docker.internal:8080/sonarqube-webhook/
+↓
 
+Jenkins Pipeline
 
----
+<br>
 
-## 🔐 Jenkins Integration
+## Quality Gate
 
-### Add Sonar Token in Jenkins
-- Manage Jenkins → Credentials
-- Kind: Secret Text
-- ID: `sonarqube-token`
+<br>    
 
----
+Quality Gate blocks deployment if:
 
-### Configure SonarQube Server in Jenkins
-- Name: `sonarqube`
-- URL: `http://host.docker.internal:9000`
-- Token: `sonarqube-token`
+- Bugs
+- Vulnerabilities
+- Code Smells
+- Coverage
 
----
+<br>
 
-## 🧪 Scanner Configuration
-
-Tool name in Jenkins:
-
-SonarScanner
-
----
-
-## 📸 Screenshots
-
-- `screenshots/sonarqube-dashboard.png`
-- `screenshots/sonarqube-project.png`
-- `screenshots/sonarqube-quality-gate.png`
-
----
-
-## 🔁 Pipeline Flow
-
-- Jenkins triggers analysis
-- SonarQube runs scan
-- Quality gate validates results
-- Jenkins continues or fails pipeline
+⬅️ [Back to README](../README.md)

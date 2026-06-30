@@ -1,3 +1,15 @@
+<br>
+
+⬅️ [Back to Setup Instructions](Setup_Instructions.md)
+
+---
+
+These policies are examples intended for this project.
+
+They demonstrate the principle of least privilege and are significantly more restrictive than the AWS managed FullAccess policies.
+
+<br>
+
 ### Policy for Jenkins:
 
 ```json
@@ -304,3 +316,11 @@
 	]
 }
 ```
+
+<br>
+
+---
+
+<br>
+
+⬅️ [Back to Setup Instructions](Setup_Instructions.md)

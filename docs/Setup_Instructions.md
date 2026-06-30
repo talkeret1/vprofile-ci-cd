@@ -6,6 +6,22 @@ To Run This Project You need to Setup Jenkins and SonarQube Docker Containers an
 
 <br>
 
+⬅️ [Back to README](../README.md)
+
+<br>
+
+## Table of Contents
+
+1. [Jenkins](#step-1-jenkins-setup)
+2. [SonarQube](#step-2-sonarqube-setup)
+3. [AWS](#step-3-aws-configurations)
+4. [Terraform](#step-4-create-ecr-repository)
+5. [Bootstrap](#step-5-load-image-to-ecr)
+6. [Future Deployments](#step-6-future-deployments)
+7. [Destroy Infrastructure](#step-7-delete-the-aws-infrastructure)
+
+<br>
+
 ## Step 1: Jenkins Setup
 
 <br>
@@ -224,7 +240,16 @@ terraform apply
 ```
 <br>
 
-⚠️ **Attention:** After a successful deployment, Terraform will output several values that should be added to the Jenkinsfile:
+### 🚀 The application has been successfully deployed to the Amazon ECS cluster.
+
+You can access it using the Application Load Balancer (ALB) URL (available as the `web_url` output from Terraform).
+
+<br>
+
+## Step 6: Future Deployments:
+
+For future deployments, you need to update the `Jenkinsfile` with the outputs from the **terraform apply** command.
+
 
 - [x] private_subnets
 - [x] ecs_security_group
@@ -234,16 +259,12 @@ terraform apply
 
 <br>
 
-### **Configure the Jenkinsfile:**
-
-The ECS deployment stage in Jenkins requires the **subnet IDs** and **ECS security group** created by Terraform.
-
 Copy the values of:
 
 - `private_subnets`
 - `ecs_security_group`
 
-and update the following variables in the Jenkinsfile:
+and update them in the `Jenkinsfile`:
 
 ```groovy
 environment {
@@ -262,3 +283,47 @@ environment {
 ❗ These values are used during the ECS deployment process to launch application tasks in the private subnets and attach the correct security group.
 
 <br>
+
+After updating the **Application Code** and **Commit/Push** the changes to the repository, 
+
+<br>
+
+**Run the jenkins pipeline again:**
+
+![Jenkins Pipeline](./images/Jenkins_Pipeline.png)
+
+<br>
+
+## Step 7: Delete the AWS Infrastructure:
+
+Destroying the project Steps:
+- Destroy the **AWS Infrastructure**
+- Destroy the **ECR Repository**
+- Destroy the **Jenkins Container**
+- Destroy the **SonarQube Container**
+
+<br>
+
+**Run:**
+
+```bash
+cd terraform
+terraform destroy
+
+cd ../terraform-ecr
+terraform destroy
+
+cd ../Jenkins
+docker-compose down
+
+cd ../SonarQube
+docker-compose down
+```
+
+## 📌 Note:
+
+⚠️ **Attention:** All sensitive data is stored in the `.env` file. To get more seucre use **AWS Secrets Manager** or **AWS Parameter Store**.
+
+<br>
+
+⬅️ [Back to README](../README.md)
