@@ -1,0 +1,21 @@
+services:
+  jenkins:
+    container_name: jenkins
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    build: .
+    ports:
+      - "8080:8080"
+      - "5000:5000"
+
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fs http://localhost:8080/login >/dev/null" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+volumes:
+  jenkins_home:

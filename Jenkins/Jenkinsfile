@@ -1,0 +1,170 @@
+pipeline {
+
+    agent any
+
+    tools {
+        maven 'Maven 3.9.15'
+    }
+
+    environment {
+
+        // GIT Repository:
+        GIT_REPO = "https://github.com/talkeret1/vprofile-ci-cd.git"
+
+        // AWS Region:
+        AWS_REGION = "us-east-1"
+
+        // ECR Variables:
+        ECR_REGISTRY = "xxxxxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_REPO = "vprofile/app"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+
+        // ECS Variables:
+        PRIVATE_SUBNETS = "subnet-xxxxxxxxxxxxxxxxx,subnet-xxxxxxxxxxxxxxxxx"
+        ECS_SECURITY_GROUP = "sg-xxxxxxxxxxxxxxxxx"
+    }
+
+    stages {
+
+        stage('Clone') {
+            steps {
+                git branch: 'main',
+                    url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Code Quality') {
+            steps {
+                sh 'mvn validate checkstyle:checkstyle'
+            }
+        }
+
+        stage('Build WAR') {
+            steps {
+                sh 'mvn clean verify'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarScanner'
+            }
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                    $scannerHome/bin/sonar-scanner \
+                    -Dsonar.projectKey=vprofile \
+                    -Dsonar.sources=src/main/java \
+                    -Dsonar.tests=src/test/java \
+                    -Dsonar.java.binaries=target/classes \
+                    -Dsonar.java.test.binaries=target/test-classes \
+                    -Dsonar.junit.reportPaths=target/surefire-reports \
+                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                    -Dsonar.sourceEncoding=UTF-8 \
+                    -Dsonar.java.source=17 \
+                    -Dsonar.java.target=17
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh """
+                docker build \
+                -t $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG \
+                -t $ECR_REGISTRY/$ECR_REPO:latest \
+                -f Docker-files/app/Dockerfile .
+                """
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                sh """
+                trivy image --severity HIGH,CRITICAL \
+                $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+                """
+            }
+        }
+
+        stage('ECR Login') {
+            steps {
+                withCredentials([aws(credentialsId: 'aws-credentials')]) {
+                    sh """
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login --username AWS --password-stdin $ECR_REGISTRY
+                    """
+                }
+            }
+        }
+
+        stage('Docker Push to ECR') {
+            steps {
+                sh """
+                docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+                docker push $ECR_REGISTRY/$ECR_REPO:latest
+                """
+            }
+        }
+
+        stage('Check ECS Status') {
+            steps {
+                withCredentials([aws(credentialsId: 'aws-credentials')]) {
+                    script {
+
+                        def status = sh(
+                            script: """
+                            aws ecs describe-services \
+                            --region $AWS_REGION \
+                            --cluster vprofile-cluster \
+                            --services vprofile-service \
+                            --query "services[0].status" \
+                            --output text 2>/dev/null || echo "MISSING"
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        echo "ECS service status: ${status}"
+
+                        env.ECS_EXISTS = (status == "ACTIVE") ? "true" : "false"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy ECS Service') {
+            when {
+                expression { return env.ECS_EXISTS == "true" }
+            }
+
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-credentials']
+                ]) {
+                    sh """
+                    aws ecs update-service \
+                    --region $AWS_REGION \
+                    --cluster vprofile-cluster \
+                    --service vprofile-service \
+                    --force-new-deployment \
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker system prune -f'
+            echo 'Docker system cleaned up.'
+        }
+    }
+}
